@@ -21,9 +21,9 @@ export function fail(error: string, status = 400) {
 }
 
 export function handleDbError(e: unknown) {
+  // Safe error handling: log detailed stack trace/error on server, return generic message to prevent data leakage
   console.error("Database Error:", e);
-  const msg = e instanceof Error ? e.message : "حدث خطأ غير متوقع في قاعدة البيانات";
-  return fail(msg, 500);
+  return fail("حدث خطأ غير متوقع في قاعدة البيانات", 500);
 }
 
 export function parsePagination(url: URL) {
