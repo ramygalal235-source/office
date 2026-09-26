@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id              String   @id @default(cuid())
+  name            String   @default("شركة دفاتر المحاسب")
+  nameEn          String?
+  taxNumber       String?
+  commercialReg   String?
+  address         String?
+  city            String?
+  phone           String?
+  email           String?
+  website         String?
+  logo            String?
+  currency        String   @default("EGP")
+  fiscalYearStart Int      @default(1)
+  vatRate         Float    @default(14)
+  whtRate         Float    @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  username           String   @unique
+  passwordHash       String
+  name               String
+  email              String?
+  phone              String?
+  role               String   @default("accountant")
+  accessAllCompanies Boolean  @default(true)
+  isActive           Boolean  @default(true)
+  lastLogin          DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  portalLoginLogs    PortalLoginLog[]
+}
+
+model ClientCompany {
+  id                  String   @id @default(cuid())
+  code                String   @unique
+  nameAr              String
+  nameEn              String?
+  legalForm           String   @default("INDIVIDUAL")
+  entityType          String   @default("COMPANY")
+  activity            String?
+  taxNumber           String?
+  taxFileNumber       String?
+  taxOffice           String?
+  vatRegistrationNumber String?
+  vatRegistrationDate   DateTime?
+  vatOffice           String?
+  commercialRegNumber String?
+  socialInsuranceNumber String?
+  electronicInvoiceId String?
+  electronicInvoiceKey String?
+  eSignatureSerial    String?
+  eSignatureExpiryDate DateTime?
+  phone               String?
+  email               String?
+  address             String?
+  city                String?
+  ownerName           String?
+  ownerNationalId     String?
+  ownerPhone          String?
+  contactPerson       String?
+  contactPhone        String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  obligations         TaxObligation[]
+  tasks               OfficeTask[]
+  documents           ArchivedDocument[]
+  platformCredentials PlatformCredential[]
+  portalLoginLogs     PortalLoginLog[]
+  invoices            Invoice[]
+  purchases           Purchase[]
+}
+
+model TaxObligation {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type          String
+  title         String
+  period        String
+  periodYear    Int
+  periodMonth   Int?
+  periodQuarter Int?
+  dueDate       DateTime
+  amountDue     Float?
+  amountPaid    Float?
+  status        String   @default("PENDING")
+  referenceNumber String?
+  notes         String?
+  fulfilledAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tasks         OfficeTask[]
+}
+
+model OfficeTask {
+  id            String   @id @default(cuid())
+  taskNumber    String   @unique
+  title         String
+  description   String?
+  companyId     String?
+  company       ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  obligationId  String?
+  obligation    TaxObligation? @relation(fields: [obligationId], references: [id], onDelete: SetNull)
+  assignedTo    String?
+  assignedToUser User?   @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  priority      String   @default("MEDIUM")
+  status        String   @default("TODO")
+  category      String   @default("GENERAL")
+  dueDate       DateTime?
+  completedAt   DateTime?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ArchivedDocument {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category    String   @default("OTHER")
+  title       String
+  fileName    String
+  mimeType    String
+  size        Int
+  storagePath String
+  issuedAt    DateTime?
+  expiresAt   DateTime?
+  tags        String?
+  notes       String?
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PlatformCredential {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  platform    String
+  label       String
+  loginUrl    String
+  username    String?
+  password    String?
+  extraField  String?
+  notes       String?
+  isActive    Boolean  @default(true)
+  lastLoginAt DateTime?
+  lastLoginStatus String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  loginLogs   PortalLoginLog[]
+
+  @@unique([companyId, platform])
+}
+
+model PortalLoginLog {
+  id           String   @id @default(cuid())
+  credentialId String
+  credential   PlatformCredential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
+  companyId    String
+  company      ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status       String
+  httpStatus   Int?
+  message      String
+  durationMs   Int
+  createdAt    DateTime @default(now())
+}
+
+model Account {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  type      String
+  parentId  String?
+  parent    Account?  @relation("AccountTree", fields: [parentId], references: [id])
+  children  Account[] @relation("AccountTree")
+  isGroup   Boolean  @default(false)
+  level     Int      @default(1)
+  isSystem  Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  companyId     String?
+  company       ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  invoiceNumber String   @unique
+  date          DateTime
+  totalAmount   Float
+  status        String   @default("DRAFT")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Purchase {
+  id             String   @id @default(cuid())
+  companyId      String?
+  company        ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  purchaseNumber String   @unique
+  date           DateTime
+  totalAmount    Float
+  status         String   @default("DRAFT")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model DocumentSequence {
+  id         String   @id @default(cuid())
+  type       String   @unique
+  prefix     String
+  nextNumber Int      @default(1)
+  padding    Int      @default(5)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  details   String?
+  username  String   @default("system")
+  createdAt DateTime @default(now())
+}
