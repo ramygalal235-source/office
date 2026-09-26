@@ -41,7 +41,7 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   portalLoginLogs    PortalLoginLog[]
-  tasks              OfficeTask[]
+  assignedTasks      OfficeTask[] @relation("TaskAssignee")
 }
 
 model ClientCompany {
@@ -119,7 +119,7 @@ model OfficeTask {
   obligationId  String?
   obligation    TaxObligation? @relation(fields: [obligationId], references: [id], onDelete: SetNull)
   assignedTo    String?
-  assignedToUser User?   @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  assignedToUser User?   @relation("TaskAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
   priority      String   @default("MEDIUM")
   status        String   @default("TODO")
   category      String   @default("GENERAL")
