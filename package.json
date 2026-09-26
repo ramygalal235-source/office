@@ -10,6 +10,7 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
+    "test": "bun test",
     "lint": "eslint .",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
