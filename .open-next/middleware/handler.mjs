@@ -58,7 +58,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/error.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/error.js
 function isOpenNextError(e) {
   try {
     return "__openNextInternal" in e;
@@ -67,11 +67,11 @@ function isOpenNextError(e) {
   }
 }
 var init_error = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/error.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/error.js"() {
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/adapters/logger.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/adapters/logger.js
 function debug(...args) {
   if (globalThis.openNextDebug) {
     console.log(...args);
@@ -114,7 +114,7 @@ function getOpenNextErrorLogLevel() {
 }
 var DOWNPLAYED_ERROR_LOGS, isDownplayedErrorLog;
 var init_logger = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/adapters/logger.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/adapters/logger.js"() {
     init_error();
     DOWNPLAYED_ERROR_LOGS = [
       {
@@ -127,9 +127,9 @@ var init_logger = __esm({
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/cookie/dist/index.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/cookie/dist/index.js
 var require_dist = __commonJS({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/cookie/dist/index.js"(exports) {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/cookie/dist/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.parseCookie = parseCookie;
@@ -376,7 +376,7 @@ var require_dist = __commonJS({
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/http/util.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/http/util.js
 function parseSetCookieHeader(cookies) {
   if (!cookies) {
     return [];
@@ -402,22 +402,22 @@ function getQueryFromIterator(it) {
   return query;
 }
 var init_util = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/http/util.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/http/util.js"() {
     init_logger();
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/converters/utils.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/converters/utils.js
 function getQueryFromSearchParams(searchParams) {
   return getQueryFromIterator(searchParams.entries());
 }
 var init_utils = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/converters/utils.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/converters/utils.js"() {
     init_util();
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/converters/edge.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/converters/edge.js
 var edge_exports = {};
 __export(edge_exports, {
   default: () => edge_default
@@ -425,7 +425,7 @@ __export(edge_exports, {
 import { Buffer as Buffer2 } from "node:buffer";
 var import_cookie, NULL_BODY_STATUSES, converter, edge_default;
 var init_edge = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/converters/edge.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/converters/edge.js"() {
     import_cookie = __toESM(require_dist(), 1);
     init_util();
     init_utils();
@@ -507,14 +507,14 @@ var init_edge = __esm({
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/wrappers/cloudflare-edge.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/wrappers/cloudflare-edge.js
 var cloudflare_edge_exports = {};
 __export(cloudflare_edge_exports, {
   default: () => cloudflare_edge_default
 });
 var cfPropNameMapping, handler, cloudflare_edge_default;
 var init_cloudflare_edge = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/wrappers/cloudflare-edge.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/wrappers/cloudflare-edge.js"() {
     cfPropNameMapping = {
       // The city name is percent-encoded.
       // See https://github.com/vercel/vercel/blob/4cb6143/packages/functions/src/headers.ts#L94C19-L94C37
@@ -555,7 +555,7 @@ var init_cloudflare_edge = __esm({
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/originResolver/pattern-env.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/originResolver/pattern-env.js
 var pattern_env_exports = {};
 __export(pattern_env_exports, {
   default: () => pattern_env_default
@@ -584,7 +584,7 @@ function initializeOnce() {
 }
 var cachedOrigins, cachedPatterns, initialized, envLoader, pattern_env_default;
 var init_pattern_env = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/originResolver/pattern-env.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/originResolver/pattern-env.js"() {
     init_logger();
     cachedPatterns = [];
     initialized = false;
@@ -620,14 +620,14 @@ var init_pattern_env = __esm({
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/assetResolver/dummy.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/assetResolver/dummy.js
 var dummy_exports = {};
 __export(dummy_exports, {
   default: () => dummy_default
 });
 var resolver, dummy_default;
 var init_dummy = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/assetResolver/dummy.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/assetResolver/dummy.js"() {
     resolver = {
       name: "dummy"
     };
@@ -635,7 +635,7 @@ var init_dummy = __esm({
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/stream.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/stream.js
 import { ReadableStream } from "node:stream/web";
 function toReadableStream(value, isBase64) {
   return new ReadableStream({
@@ -663,18 +663,18 @@ function emptyReadableStream() {
 }
 var maybeSomethingBuffer;
 var init_stream = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/stream.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/stream.js"() {
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/proxyExternalRequest/fetch.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/proxyExternalRequest/fetch.js
 var fetch_exports = {};
 __export(fetch_exports, {
   default: () => fetch_default
 });
 var fetchProxy, fetch_default;
 var init_fetch = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/overrides/proxyExternalRequest/fetch.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/overrides/proxyExternalRequest/fetch.js"() {
     init_stream();
     fetchProxy = {
       name: "fetch-proxy",
@@ -3873,7 +3873,7 @@ importScripts(...self.TURBOPACK_NEXT_CHUNK_URLS.map(c => self.TURBOPACK_WORKER_L
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/edgeFunctionHandler.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/edgeFunctionHandler.js
 var edgeFunctionHandler_exports = {};
 __export(edgeFunctionHandler_exports, {
   default: () => edgeFunctionHandler
@@ -3908,7 +3908,7 @@ async function edgeFunctionHandler(request) {
   return response;
 }
 var init_edgeFunctionHandler = __esm({
-  "../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/edgeFunctionHandler.js"() {
+  "../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/edgeFunctionHandler.js"() {
     globalThis._ENTRIES = {};
     globalThis.self = globalThis;
     globalThis._ROUTES = [{ "name": "middleware", "page": "/", "regex": ["^(?:\\/(_next\\/data\\/[^/]{1,}))?\\/api(?:\\/((?:[^\\/#\\?]+?)(?:\\/(?:[^\\/#\\?]+?))*))?(\\\\.json)?[\\/#\\?]?$"] }];
@@ -3918,7 +3918,7 @@ var init_edgeFunctionHandler = __esm({
   }
 });
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/cacheHeaders.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/cacheHeaders.js
 var CACHE_CONTROL_HEADER = "cache-control";
 var OPEN_NEXT_CACHE_HEADER = "x-opennext-cache";
 var CACHE_TAGS_HEADER = "x-next-cache-tags";
@@ -3934,10 +3934,10 @@ function fixCacheControlForError(headers, statusCode) {
   }
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/promise.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/promise.js
 init_logger();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/requestCache.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/requestCache.js
 var RequestCache = class {
   _caches = /* @__PURE__ */ new Map();
   /**
@@ -3955,7 +3955,7 @@ var RequestCache = class {
   }
 };
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/promise.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/promise.js
 var DetachedPromise = class {
   resolve;
   reject;
@@ -4036,13 +4036,13 @@ function runWithOpenNextRequestContext({ isISRRevalidation, waitUntil, requestId
   });
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/adapters/middleware.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/adapters/middleware.js
 init_logger();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/createGenericHandler.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/createGenericHandler.js
 init_logger();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/resolve.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/resolve.js
 async function resolveConverter(converter2) {
   if (typeof converter2 === "function") {
     return converter2();
@@ -4079,7 +4079,7 @@ async function resolveProxyRequest(proxyRequest) {
   return m_1.default;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/createGenericHandler.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/createGenericHandler.js
 async function createGenericHandler(handler3) {
   const config = await import("./open-next.config.mjs").then((m) => m.default);
   globalThis.openNextConfig = config;
@@ -4091,11 +4091,11 @@ async function createGenericHandler(handler3) {
   return wrapper(handler3.handler, converter2);
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/util.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/util.js
 import crypto2 from "node:crypto";
 import { parse as parseQs, stringify as stringifyQs } from "node:querystring";
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/adapters/config/index.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/adapters/config/index.js
 init_logger();
 import path from "node:path";
 globalThis.__dirname ??= "";
@@ -4103,11 +4103,11 @@ var NEXT_DIR = path.join(__dirname, ".next");
 var OPEN_NEXT_DIR = path.join(__dirname, ".open-next");
 debug({ NEXT_DIR, OPEN_NEXT_DIR });
 var NextConfig = { "distDir": ".next", "cacheComponents": false, "htmlLimitedBots": "[\\w-]+-Google|Google-[\\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight", "assetPrefix": "", "output": "standalone", "trailingSlash": false, "images": { "deviceSizes": [640, 750, 828, 1080, 1200, 1920, 2048, 3840], "imageSizes": [32, 48, 64, 96, 128, 256, 384], "path": "/_next/image", "loader": "default", "loaderFile": "", "domains": [], "disableStaticImages": false, "minimumCacheTTL": 14400, "formats": ["image/webp"], "maximumRedirects": 3, "dangerouslyAllowLocalIP": false, "dangerouslyAllowSVG": false, "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;", "contentDispositionType": "attachment", "localPatterns": [{ "pathname": "**", "search": "" }], "remotePatterns": [], "qualities": [75], "unoptimized": false }, "reactMaxHeadersLength": 6e3, "cacheLife": { "default": { "stale": 300, "revalidate": 900, "expire": 4294967294 }, "seconds": { "stale": 30, "revalidate": 1, "expire": 60 }, "minutes": { "stale": 300, "revalidate": 60, "expire": 3600 }, "hours": { "stale": 300, "revalidate": 3600, "expire": 86400 }, "days": { "stale": 300, "revalidate": 86400, "expire": 604800 }, "weeks": { "stale": 300, "revalidate": 604800, "expire": 2592e3 }, "max": { "stale": 300, "revalidate": 2592e3, "expire": 31536e3 } }, "basePath": "", "expireTime": 31536e3, "generateEtags": true, "poweredByHeader": true, "cacheHandlers": {}, "cacheMaxMemorySize": 52428800, "compress": true, "i18n": null, "httpAgentOptions": { "keepAlive": true }, "pageExtensions": ["tsx", "ts", "jsx", "js"], "useFileSystemPublicRoutes": true, "experimental": { "ppr": false, "staleTimes": { "dynamic": 0, "static": 300 }, "dynamicOnHover": false, "inlineCss": false, "authInterrupts": false, "fetchCacheKeyPrefix": "", "isrFlushToDisk": true, "optimizeCss": false, "nextScriptWorkers": false, "disableOptimizedLoading": false, "largePageDataBytes": 128e3, "serverComponentsHmrCache": true, "caseSensitiveRoutes": false, "validateRSCRequestHeaders": false, "useSkewCookie": false, "preloadEntriesOnStart": true, "hideLogsAfterAbort": false, "removeUncaughtErrorAndRejectionListeners": false, "imgOptConcurrency": null, "imgOptMaxInputPixels": 268402689, "imgOptSequentialRead": null, "imgOptSkipMetadata": null, "imgOptTimeoutInSeconds": 7, "proxyClientMaxBodySize": 10485760, "trustHostHeader": false, "isExperimentalCompile": false }, "skipTrailingSlashRedirect": false, "serverExternalPackages": [] };
-var BuildId = "Mb3eFnKjgVLu5qAeYRfAQ";
+var BuildId = "w-1SW-kCvxb8G3yvkKguW";
 var RoutesManifest = { "basePath": "", "rewrites": { "beforeFiles": [], "afterFiles": [], "fallback": [] }, "redirects": [{ "source": "/:path+/", "destination": "/:path+", "internal": true, "priority": true, "statusCode": 308, "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$" }], "routes": { "static": [{ "page": "/_global-error", "regex": "^/_global\\-error(?:/)?$", "routeKeys": {}, "namedRegex": "^/_global\\-error(?:/)?$" }], "dynamic": [], "data": { "static": [], "dynamic": [] } }, "locales": [] };
 var ConfigHeaders = [];
 var PrerenderManifest = { "version": 4, "routes": { "/_global-error": { "experimentalBypassFor": [{ "type": "header", "key": "next-action" }, { "type": "header", "key": "content-type", "value": "multipart/form-data;.*" }], "initialRevalidateSeconds": false, "srcRoute": "/_global-error", "dataRoute": "/_global-error.rsc", "allowHeader": ["host", "x-matched-path", "x-prerender-revalidate", "x-prerender-revalidate-if-generated", "x-next-revalidated-tags", "x-next-revalidate-tag-token"] } }, "dynamicRoutes": {}, "notFoundRoutes": [], "preview": { "previewModeId": "24febf7843be8b4581cd06945b3d2cdb", "previewModeSigningKey": "64c9f7930c4b4022e583286dae7ec7dfe3636c61f8500c76dd7a0c4ceb24d3ad", "previewModeEncryptionKey": "fce4efd5b063a3a1e3d866885c89f76686d3e27f18cecf681632bfd5198f3d88" } };
-var MiddlewareManifest = { "version": 3, "middleware": { "/": { "files": ["server/edge/chunks/node_modules_next_dist_esm_build_templates_edge-wrapper_78fa9d6a.js", "server/edge/chunks/[root-of-the-server]__25fe7590._.js", "server/edge/chunks/turbopack-node_modules_next_dist_esm_build_templates_edge-wrapper_99e3e1b8.js"], "name": "middleware", "page": "/", "matchers": [{ "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?\\/api(?:\\/((?:[^\\/#\\?]+?)(?:\\/(?:[^\\/#\\?]+?))*))?(\\\\.json)?[\\/#\\?]?$", "originalSource": "/api/:path*" }], "wasm": [], "assets": [], "env": { "__NEXT_BUILD_ID": "Mb3eFnKjgVLu5qAeYRfAQ", "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "g46mseIjzItCQ/XUwUV90nvsy0HeVbm1Dk/9y5aXldw=", "__NEXT_PREVIEW_MODE_ID": "24febf7843be8b4581cd06945b3d2cdb", "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "fce4efd5b063a3a1e3d866885c89f76686d3e27f18cecf681632bfd5198f3d88", "__NEXT_PREVIEW_MODE_SIGNING_KEY": "64c9f7930c4b4022e583286dae7ec7dfe3636c61f8500c76dd7a0c4ceb24d3ad" } } }, "sortedMiddleware": ["/"], "functions": {} };
+var MiddlewareManifest = { "version": 3, "middleware": { "/": { "files": ["server/edge/chunks/node_modules_next_dist_esm_build_templates_edge-wrapper_78fa9d6a.js", "server/edge/chunks/[root-of-the-server]__25fe7590._.js", "server/edge/chunks/turbopack-node_modules_next_dist_esm_build_templates_edge-wrapper_99e3e1b8.js"], "name": "middleware", "page": "/", "matchers": [{ "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?\\/api(?:\\/((?:[^\\/#\\?]+?)(?:\\/(?:[^\\/#\\?]+?))*))?(\\\\.json)?[\\/#\\?]?$", "originalSource": "/api/:path*" }], "wasm": [], "assets": [], "env": { "__NEXT_BUILD_ID": "w-1SW-kCvxb8G3yvkKguW", "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "g46mseIjzItCQ/XUwUV90nvsy0HeVbm1Dk/9y5aXldw=", "__NEXT_PREVIEW_MODE_ID": "24febf7843be8b4581cd06945b3d2cdb", "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "fce4efd5b063a3a1e3d866885c89f76686d3e27f18cecf681632bfd5198f3d88", "__NEXT_PREVIEW_MODE_SIGNING_KEY": "64c9f7930c4b4022e583286dae7ec7dfe3636c61f8500c76dd7a0c4ceb24d3ad" } } }, "sortedMiddleware": ["/"], "functions": {} };
 var AppPathRoutesManifest = { "/_global-error/page": "/_global-error", "/_not-found/page": "/_not-found" };
 var FunctionsConfigManifest = { "version": 1, "functions": {} };
 var PagesManifest = { "/500": "pages/500.html" };
@@ -4115,17 +4115,17 @@ process.env.NEXT_BUILD_ID = BuildId;
 process.env.OPEN_NEXT_BUILD_ID = NextConfig.deploymentId ?? BuildId;
 process.env.NEXT_PREVIEW_MODE_ID = PrerenderManifest?.preview?.previewModeId;
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/http/openNextResponse.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/http/openNextResponse.js
 init_logger();
 import { Transform } from "node:stream";
 init_util();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/util.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/util.js
 init_util();
 init_logger();
 import { ReadableStream as ReadableStream2 } from "node:stream/web";
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/binary.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/binary.js
 var commonBinaryMimeTypes = /* @__PURE__ */ new Set([
   "application/octet-stream",
   // Docs
@@ -4193,11 +4193,11 @@ function isBinaryContentType(contentType) {
   return commonBinaryMimeTypes.has(value);
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/i18n/index.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/i18n/index.js
 init_stream();
 init_logger();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/i18n/accept-header.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/i18n/accept-header.js
 function parse(raw, preferences, options) {
   const lowers = /* @__PURE__ */ new Map();
   const header = raw.replace(/[ \t]/g, "");
@@ -4297,7 +4297,7 @@ function acceptLanguage(header = "", preferences) {
   })[0] || void 0;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/i18n/index.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/i18n/index.js
 function isLocalizedPath(path3) {
   return NextConfig.i18n?.locales.includes(path3.split("/")[1].toLowerCase()) ?? false;
 }
@@ -4395,7 +4395,7 @@ function handleLocaleRedirect(internalEvent) {
   return false;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/queue.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/queue.js
 function generateShardId(rawPath, maxConcurrency, prefix) {
   let a = cyrb128(rawPath);
   let t = a += 1831565813;
@@ -4429,7 +4429,7 @@ function cyrb128(str) {
   return h1 >>> 0;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/util.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/util.js
 function isExternal(url, host) {
   if (!url)
     return false;
@@ -4539,17 +4539,17 @@ function normalizeLocationHeader(location2, baseUrl, encodeQuery = false) {
   return href;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routingHandler.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routingHandler.js
 init_logger();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/cacheInterceptor.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/cacheInterceptor.js
 import { createHash } from "node:crypto";
 init_stream();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/cache.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/cache.js
 init_logger();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/semver.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/semver.js
 function compareSemver(v1, operator, v2) {
   let versionDiff = 0;
   if (v1 === "latest") {
@@ -4590,7 +4590,7 @@ function compareSemver(v1, operator, v2) {
   }
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/cache.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/cache.js
 async function isStale(key, tags, lastModified) {
   if (!compareSemver(globalThis.nextVersion, ">=", "16.0.0")) {
     return false;
@@ -4634,7 +4634,7 @@ function getTagsFromValue(value) {
   }
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/cacheInterceptor.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/cacheInterceptor.js
 init_logger();
 var CACHE_ONE_YEAR = 60 * 60 * 24 * 365;
 var CACHE_ONE_MONTH = 60 * 60 * 24 * 30;
@@ -4865,7 +4865,7 @@ async function cacheInterceptor(event) {
   return event;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/path-to-regexp/dist.es2015/index.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -5241,18 +5241,18 @@ function pathToRegexp(path3, keys, options) {
   return stringToRegexp(path3, keys, options);
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/utils/normalize-path.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/utils/normalize-path.js
 import path2 from "node:path";
 function normalizeRepeatedSlashes(url) {
   const urlNoQuery = url.host + url.pathname;
   return `${url.protocol}//${urlNoQuery.replace(/\\/g, "/").replace(/\/\/+/g, "/")}${url.search}`;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/matcher.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/matcher.js
 init_stream();
 init_logger();
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/routeMatcher.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/routeMatcher.js
 var optionalLocalePrefixRegex = `^/(?:${RoutesManifest.locales.map((locale) => `${locale}/?`).join("|")})?`;
 var optionalBasepathPrefixRegex = RoutesManifest.basePath ? `^${RoutesManifest.basePath}/?` : "^/";
 var optionalPrefix = optionalLocalePrefixRegex.replace("^/", optionalBasepathPrefixRegex);
@@ -5302,7 +5302,7 @@ function getStaticAPIRoutes() {
   return [...pagesStaticAPIRoutes, ...appPathsStaticAPIRoutes];
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/matcher.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/matcher.js
 var routeHasMatcher = (headers, cookies, query) => (redirect) => {
   switch (redirect.type) {
     case "header":
@@ -5594,7 +5594,7 @@ function handleFallbackFalse(internalEvent, prerenderManifest) {
   };
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routing/middleware.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routing/middleware.js
 init_stream();
 init_utils();
 var middlewareManifest = MiddlewareManifest;
@@ -5716,7 +5716,7 @@ async function handleMiddleware(internalEvent, initialSearch, middlewareLoader =
   };
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/core/routingHandler.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/core/routingHandler.js
 var MIDDLEWARE_HEADER_PREFIX = "x-middleware-response-";
 var MIDDLEWARE_HEADER_PREFIX_LEN = MIDDLEWARE_HEADER_PREFIX.length;
 var INTERNAL_HEADER_PREFIX = "x-opennext-";
@@ -5901,7 +5901,7 @@ function isInternalResult(eventOrResult) {
   return eventOrResult != null && "statusCode" in eventOrResult;
 }
 
-// ../home/jules/.npm/_npx/72a7346bab235e2f/node_modules/@opennextjs/aws/dist/adapters/middleware.js
+// ../tmp/bunx-1001-@opennextjs/cloudflare@latest/node_modules/@opennextjs/aws/dist/adapters/middleware.js
 globalThis.internalFetch = fetch;
 globalThis.__openNextAls = new AsyncLocalStorage();
 var defaultHandler = async (internalEvent, options) => {
