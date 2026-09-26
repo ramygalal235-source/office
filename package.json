@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "نظام دفاتر المحاسب — إدارة مكتب المحاسبة والشق المالي والمحاسبي (يعمل محلياً بلا إنترنت)",
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
@@ -11,7 +14,7 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:init": "node scripts/init-db.mjs",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate --schema=prisma/schema.prisma"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
