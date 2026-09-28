@@ -1,3 +1,5 @@
+import seedData from "./seed-data.json";
+
 // ألوان وهوية النظام
 export const BRAND = {
   primary: "#0d7a5f",
@@ -6,91 +8,61 @@ export const BRAND = {
   subtitle: "نظام إدارة مكتب المحاسبة والمراجعة",
 };
 
-// شجرة الحسابات الافتراضية القياسية
-export const DEFAULT_CHART_OF_ACCOUNTS = [
-  // 1: الأصول
-  { code: "1", name: "الأصول", type: "ASSET", isGroup: true },
-  { code: "11", name: "الأصول المتداولة", type: "ASSET", parentCode: "1", isGroup: true },
-  { code: "1101", name: "النقدية بالصندوق", type: "ASSET", parentCode: "11", isGroup: false },
-  { code: "1102", name: "البنوك", type: "ASSET", parentCode: "11", isGroup: false },
-  { code: "1103", name: "العملاء", type: "ASSET", parentCode: "11", isGroup: false },
-  { code: "1104", name: "المخزون", type: "ASSET", parentCode: "11", isGroup: false },
-  { code: "1105", name: "أوراق قبض", type: "ASSET", parentCode: "11", isGroup: false },
-  { code: "1106", name: "عهد وسلف موظفين", type: "ASSET", parentCode: "11", isGroup: false },
-  { code: "1107", name: "أرصدة مدينة أخرى", type: "ASSET", parentCode: "11", isGroup: false },
+// ===== بيانات التهيئة =====
+// مصدر الحقيقة الوحيد لهذه البيانات هو seed-data.json حتى يقرأها
+// سكربت التهيئة (scripts/init-db.mjs) نفسه بدون تكرار الكود.
 
-  // 12: الأصول الثابتة
-  { code: "12", name: "الأصول غير المتداولة (الثابتة)", type: "ASSET", parentCode: "1", isGroup: true },
-  { code: "1201", name: "الأراضي والمباني", type: "ASSET", parentCode: "12", isGroup: false },
-  { code: "1202", name: "الآلات والمعدات", type: "ASSET", parentCode: "12", isGroup: false },
-  { code: "1203", name: "السيارات ووسائل النقل", type: "ASSET", parentCode: "12", isGroup: false },
-  { code: "1204", name: "أثاث ومعدات مكاتب", type: "ASSET", parentCode: "12", isGroup: false },
-  { code: "1205", name: "أجهزة كمبيوتر وإلكترونيات", type: "ASSET", parentCode: "12", isGroup: false },
-  { code: "1299", name: "مجمع إهلاك الأصول الثابتة", type: "ASSET", parentCode: "12", isGroup: false },
+export interface ChartAccountSeed {
+  code: string;
+  name: string;
+  type: string;
+  parentCode?: string;
+  isGroup: boolean;
+}
 
-  // 2: الالتزامات
-  { code: "2", name: "الالتزامات", type: "LIABILITY", isGroup: true },
-  { code: "21", name: "الالتزامات المتداولة", type: "LIABILITY", parentCode: "2", isGroup: true },
-  { code: "2101", name: "الموردون", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2102", name: "أوراق دفع", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2103", name: "ضريبة القيمة المضافة المستحقة", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2104", name: "ضريبة كسب العمل المستحقة", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2105", name: "ضريبة الخصم والتحصيل", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2106", name: "التأمينات الاجتماعية المستحقة", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2107", name: "مصروفات مستحقة", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2108", name: "إيرادات مقدمة", type: "LIABILITY", parentCode: "21", isGroup: false },
-  { code: "2109", name: "أرصدة دائنة أخرى", type: "LIABILITY", parentCode: "21", isGroup: false },
+export interface ExpenseCategorySeed {
+  name: string;
+  code: string;
+}
 
-  // 3: حقوق الملكية
-  { code: "3", name: "حقوق الملكية", type: "EQUITY", isGroup: true },
-  { code: "3101", name: "رأس المال", type: "EQUITY", parentCode: "3", isGroup: false },
-  { code: "3102", name: "جاري الشركاء / صاحب العمل", type: "EQUITY", parentCode: "3", isGroup: false },
-  { code: "3103", name: "أرباح / خسائر مرحلة", type: "EQUITY", parentCode: "3", isGroup: false },
-  { code: "3104", name: "أرباح العام الحالي", type: "EQUITY", parentCode: "3", isGroup: false },
-  { code: "3105", name: "احتياطيات", type: "EQUITY", parentCode: "3", isGroup: false },
+export interface SequenceSeed {
+  type: string;
+  prefix: string;
+  nextNumber: number;
+  padding: number;
+}
 
-  // 4: الإيرادات
-  { code: "4", name: "الإيرادات", type: "INCOME", isGroup: true },
-  { code: "4101", name: "إيرادات المبيعات / الخدمات", type: "INCOME", parentCode: "4", isGroup: false },
-  { code: "4102", name: "مردودات ومسموحات المبيعات", type: "INCOME", parentCode: "4", isGroup: false },
-  { code: "4103", name: "خصم مسموح به", type: "INCOME", parentCode: "4", isGroup: false },
-  { code: "4201", name: "إيرادات أخرى", type: "INCOME", parentCode: "4", isGroup: false },
+/** شجرة الحسابات الافتراضية القياسية */
+export const DEFAULT_CHART_OF_ACCOUNTS = seedData.chartOfAccounts as ChartAccountSeed[];
 
-  // 5: التكاليف والمصروفات
-  { code: "5", name: "المصروفات والتكاليف", type: "EXPENSE", isGroup: true },
-  { code: "5101", name: "تكلفة البضاعة المباعة / تكلفة النشاط", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5201", name: "رواتب وأجور", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5202", name: "إيجار مقر", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5203", name: "كهرباء ومياه وإنترنت", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5204", name: "إهلاك أصول ثابتة", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5205", name: "أدوات مكتبية ومطبوعات", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5206", name: "صيانة وإصلاحات", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5207", name: "دعاية وإعلان وتسويق", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5208", name: "عمولات ورسوم بنكية", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5209", name: "مصروفات انتقال وضيافة", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5210", name: "ضرائب ورسوم حكومية", type: "EXPENSE", parentCode: "5", isGroup: false },
-  { code: "5299", name: "مصروفات إدارية وعمومية أخرى", type: "EXPENSE", parentCode: "5", isGroup: false },
-];
+export const DEFAULT_EXPENSE_CATEGORIES = seedData.expenseCategories as ExpenseCategorySeed[];
 
-export const DEFAULT_EXPENSE_CATEGORIES = [
-  { name: "رواتب وأجور", code: "EXP-SAL" },
-  { name: "إيجار مقرات", code: "EXP-RENT" },
-  { name: "كهرباء ومياه وغاز", code: "EXP-UTIL" },
-  { name: "إنترنت واتصالات", code: "EXP-COMM" },
-  { name: "أدوات مكتبية ومطبوعات", code: "EXP-STAT" },
-  { name: "صيانة ونظافة", code: "EXP-MAINT" },
-  { name: "دعاية وإعلان", code: "EXP-ADV" },
-  { name: "رسوم وبنوك", code: "EXP-BANK" },
-  { name: "انتقالات وسفر", code: "EXP-TRAV" },
-  { name: "ضرائب ورخص وتأمينات", code: "EXP-GOV" },
-  { name: "أخرى", code: "EXP-OTHER" },
-];
+export const DEFAULT_SEQUENCES = seedData.sequences as SequenceSeed[];
 
-export const DEFAULT_SEQUENCES = [
-  { type: "INVOICE", prefix: "INV-", nextNumber: 1, padding: 5 },
-  { type: "PURCHASE", prefix: "PUR-", nextNumber: 1, padding: 5 },
-  { type: "JOURNAL", prefix: "JV-", nextNumber: 1, padding: 5 },
-  { type: "PAYMENT_IN", prefix: "RV-", nextNumber: 1, padding: 5 },
-  { type: "PAYMENT_OUT", prefix: "PV-", nextNumber: 1, padding: 5 },
-  { type: "TASK", prefix: "TSK-", nextNumber: 1, padding: 5 },
-];
+/** أنواع الحسابات في دليل الحسابات */
+export const ACCOUNT_TYPES = [
+  { value: "ASSET", label: "أصول" },
+  { value: "LIABILITY", label: "التزامات" },
+  { value: "EQUITY", label: "حقوق ملكية" },
+  { value: "INCOME", label: "إيرادات" },
+  { value: "EXPENSE", label: "مصروفات" },
+] as const;
+
+/** طبيعة الحساب التي تُحتسب ضمنها الحركة */
+export const ACCOUNT_NATURE: Record<string, "DEBIT" | "CREDIT"> = {
+  ASSET: "DEBIT",
+  EXPENSE: "DEBIT",
+  LIABILITY: "CREDIT",
+  EQUITY: "CREDIT",
+  INCOME: "CREDIT",
+};
+
+/** ربط أنواع المستندات بتسلسلات الأرقام */
+export const DOCUMENT_TYPES = {
+  INVOICE: "فاتورة بيع",
+  PURCHASE: "فاتورة شراء",
+  PAYMENT_IN: "سند قبض",
+  PAYMENT_OUT: "سند صرف",
+  JOURNAL: "قيد يومية",
+  TASK: "مهمة مكتبية",
+} as const;
