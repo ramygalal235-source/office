@@ -1,0 +1,99 @@
+import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
+import { auditLog, fail, generateNumber, getSessionUser, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
+import { firstIssue } from "@/lib/validators";
+import { lineTotal, round2, sumMoney } from "@/lib/money";
+import { purchaseSchema } from "../invoices/schema";
+
+export async function GET(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    const { page, limit, skip, take } = parsePagination(url);
+    const status = url.searchParams.get("status") ?? "";
+    const supplierId = url.searchParams.get("supplierId") ?? "";
+    const q = (url.searchParams.get("q") ?? "").trim();
+
+    const where = {
+      ...(status ? { status } : {}),
+      ...(supplierId ? { supplierId } : {}),
+      ...(q ? { purchaseNumber: { contains: q } } : {}),
+    };
+
+    const [items, total, sums] = await Promise.all([
+      db.purchase.findMany({
+        where,
+        include: {
+          supplier: { select: { id: true, name: true } },
+          _count: { select: { items: true } },
+        },
+        orderBy: { date: "desc" },
+        skip,
+        take,
+      }),
+      db.purchase.count({ where }),
+      db.purchase.aggregate({
+        where: { ...where, status: { notIn: ["DRAFT", "CANCELLED"] } },
+        _sum: { totalAmount: true, taxAmount: true, paidAmount: true },
+      }),
+    ]);
+
+    return ok(items, { page, limit, total, pages: Math.ceil(total / limit), totals: sums._sum });
+  } catch (e) {
+    return handleDbError(e);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const parsed = purchaseSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) return fail(firstIssue(parsed.error));
+
+    const { items, discount, supplierId, ...header } = parsed.data;
+    const user = getSessionUser(req);
+
+    const lines = items.map((item, index) => {
+      const t = lineTotal(item);
+      return {
+        productId: item.productId || null,
+        description: item.description,
+        quantity: round2(item.quantity),
+        unitPrice: round2(item.unitPrice),
+        discount: round2(item.discount),
+        taxRate: round2(item.taxRate),
+        lineNet: t.net,
+        lineTax: t.tax,
+        lineTotal: t.total,
+        accountId: item.accountId || null,
+        sortOrder: index,
+      };
+    });
+
+    const subtotal = sumMoney(lines.map((l) => l.quantity * l.unitPrice));
+    const net = round2(subtotal - discount);
+    const taxAmount = sumMoney(lines.map((l) => l.lineTax));
+    const totalAmount = round2(net + taxAmount);
+
+    const purchaseNumber = await generateNumber("PURCHASE");
+
+    const created = await db.purchase.create({
+      data: {
+        ...header,
+        supplierId: supplierId || null,
+        purchaseNumber,
+        subtotal,
+        discount,
+        taxAmount,
+        totalAmount,
+        paidAmount: 0,
+        createdBy: user?.username ?? "system",
+        items: { create: lines },
+      },
+      include: { items: true },
+    });
+
+    await auditLog("CREATE", "Purchase", created.id, `فاتورة شراء ${purchaseNumber} بمبلغ ${totalAmount}`, user?.username);
+    return ok(created);
+  } catch (e) {
+    return handleDbError(e);
+  }
+}

@@ -29,18 +29,18 @@ export const NAV: NavGroup[] = [
   {
     title: "المحاسبة",
     items: [
-      { href: "/accounts", disabled: true, label: "دليل الحسابات", icon: "BookOpen" },
+      { href: "/accounts", label: "دليل الحسابات", icon: "BookOpen" },
       { href: "/parties", disabled: true, label: "العملاء والموردون", icon: "Users" },
-      { href: "/invoices", disabled: true, label: "فواتير البيع", icon: "Receipt" },
-      { href: "/purchases", disabled: true, label: "فواتير الشراء", icon: "ShoppingCart" },
+      { href: "/invoices", label: "فواتير البيع", icon: "Receipt" },
+      { href: "/purchases", label: "فواتير الشراء", icon: "ShoppingCart" },
       { href: "/safes", disabled: true, label: "الخزائن والبنوك", icon: "Wallet" },
       { href: "/payments", disabled: true, label: "التحصيل والدفع", icon: "ArrowLeftRight" },
-      { href: "/journal", disabled: true, label: "قيود اليومية", icon: "ScrollText" },
+      { href: "/journal", label: "قيود اليومية", icon: "ScrollText" },
     ],
   },
   {
     title: "التقارير",
-    items: [{ href: "/reports", disabled: true, label: "التقارير المالية", icon: "BarChart3" }],
+    items: [{ href: "/reports", label: "التقارير المالية", icon: "BarChart3" }],
   },
   {
     title: "الإدارة",

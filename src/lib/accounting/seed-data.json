@@ -63,6 +63,13 @@
       "isGroup": false
     },
     {
+      "code": "1108",
+      "name": "ضريبة القيمة المضافة (مدخلات)",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
       "code": "12",
       "name": "الأصول غير المتداولة (الثابتة)",
       "type": "ASSET",

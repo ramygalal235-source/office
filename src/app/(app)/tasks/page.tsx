@@ -17,7 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { priorityLabel, taskStatusLabel } from "@/components/status-badge";
-import { TASK_CATEGORY_LABELS } from "@/lib/domain";
 import { TaskForm } from "./task-form";
 import { TaskRowActions } from "./task-row-actions";
 
