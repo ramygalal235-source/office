@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     const where = { ...(type ? { type } : {}), ...(safeId ? { safeId } : {}) };
 
-    const [items, total, sums] = await Promise.all([
+    const [items, total, sums, posted] = await Promise.all([
       db.payment.findMany({
         where,
         include: { party: { select: { id: true, name: true } }, safe: { select: { id: true, name: true } } },
@@ -38,9 +38,16 @@ export async function GET(req: NextRequest) {
       }),
       db.payment.count({ where }),
       db.payment.groupBy({ by: ["type"], where, _sum: { amount: true } }),
+      db.journalEntry.findMany({
+        where: { sourceType: "PAYMENT", sourceId: { in: items.map((p) => p.id) } },
+        select: { sourceId: true },
+      }),
     ]);
 
-    return ok(items, { page, limit, total, pages: Math.ceil(total / limit), totals: sums });
+    const postedSet = new Set(posted.map((e) => e.sourceId));
+    const withPosted = items.map((p) => ({ ...p, journalPosted: postedSet.has(p.id) }));
+
+    return ok(withPosted, { page, limit, total, pages: Math.ceil(total / limit), totals: sums });
   } catch (e) {
     return handleDbError(e);
   }
