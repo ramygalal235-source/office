@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // مخرجات مستقلة (standalone) لتشغيل البرنامج داخل غلاف .exe —
+  // انظر launcher/electron و scripts/package-standalone.mjs
+  output: "standalone",
 };
 
 export default nextConfig;
