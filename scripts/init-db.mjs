@@ -155,6 +155,71 @@ async function seedSettings() {
   console.log(`  • تم تهيئة ${defaults.length} إعداد للنظام`);
 }
 
+// ===== الأتمتة وإدارة المكتب =====
+
+async function seedAutomation() {
+  const services = [
+    { code: "BOOK-KEEPING", name: "مسك دفاتر", category: "ACCOUNTING", defaultFee: 4000, slaDays: 7 },
+    { code: "VAT-MONTHLY", name: "إقرار ضريبة القيمة المضافة الشهري", category: "TAX", defaultFee: 1500, slaDays: 5 },
+    { code: "INCOME-TAX", name: "الإقرار الضريبي عن العام المالي", category: "TAX", defaultFee: 8000, slaDays: 30 },
+    { code: "AUDIT-YEAR", name: "مراجعة القوائم المالية السنوية", category: "AUDIT", defaultFee: 25000, slaDays: 45 },
+    { code: "PAYROLL", name: "رواتب وأشغال", category: "PAYROLL", defaultFee: 3000, slaDays: 5 },
+    { code: "ADVISORY", name: "استشارات ضريبية", category: "ADVISORY", defaultFee: 0, slaDays: 10 },
+  ];
+
+  let servicesCreated = 0;
+  for (const s of services) {
+    const existing = await db.serviceType.findUnique({ where: { code: s.code } });
+    if (existing) continue;
+    await db.serviceType.create({ data: s });
+    servicesCreated += 1;
+  }
+  if (servicesCreated) console.log(`  • تم إنشاء ${servicesCreated} خدمة من الكتالوج`);
+
+  const templates = [
+    { code: "BK-COLLECT", title: "تحصيل المديونيات المستحقة", category: "ACCOUNTING", priority: "HIGH", offsetDays: 0, serviceCode: "BOOK-KEEPING", estimatedMinutes: 120 },
+    { code: "BK-BANKREC", title: "مطابقة كشوف البنك مع اليومية", category: "ACCOUNTING", priority: "HIGH", offsetDays: 3, serviceCode: "BOOK-KEEPING", estimatedMinutes: 180 },
+    { code: "BK-EXPENSES", title: "مراجعة وتنظيم مصروفات الفترة", category: "ACCOUNTING", priority: "MEDIUM", offsetDays: 5, serviceCode: "BOOK-KEEPING", estimatedMinutes: 90 },
+    { code: "VAT-PREP", title: "تجهيز إقرار القيمة المضافة", category: "VAT", priority: "URGENT", offsetDays: 1, serviceCode: "VAT-MONTHLY", estimatedMinutes: 150 },
+    { code: "VAT-FILE", title: "رفع الإقرار على بوابة مصلحة الضرائب", category: "FILING", priority: "URGENT", offsetDays: 3, serviceCode: "VAT-MONTHLY", estimatedMinutes: 45 },
+    { code: "IT-COMPUTE", title: "إقرار ضريبة الدخل السنوي", category: "TAX", priority: "HIGH", offsetDays: 7, serviceCode: "INCOME-TAX", estimatedMinutes: 300 },
+    { code: "AUD-PREP", title: "تجهيز ملفات المراجعة السنوية", category: "AUDIT", priority: "HIGH", offsetDays: 10, serviceCode: "AUDIT-YEAR", estimatedMinutes: 600 },
+    { code: "AUD-FIELDWORK", title: "أعمال المراجعة الميدانية", category: "AUDIT", priority: "HIGH", offsetDays: 25, serviceCode: "AUDIT-YEAR", estimatedMinutes: 900 },
+    { code: "PAY-PREP", title: "اعتماد مسير الرواتب", category: "PAYROLL", priority: "HIGH", offsetDays: 0, serviceCode: "PAYROLL", estimatedMinutes: 90 },
+    { code: "GEN-REVIEW", title: "مراجعة نهائية واعتماد", category: "GENERAL", priority: "MEDIUM", offsetDays: 14, serviceCode: null, estimatedMinutes: 60 },
+  ];
+
+  let templatesCreated = 0;
+  for (const t of templates) {
+    const existing = await db.taskTemplate.findUnique({ where: { code: t.code } });
+    if (existing) continue;
+    await db.taskTemplate.create({ data: { ...t, isActive: true } });
+    templatesCreated += 1;
+  }
+  if (templatesCreated) console.log(`  • تم إنشاء ${templatesCreated} قالب مهمة`);
+
+  let rulesCreated = 0;
+  for (const r of seedData.automationRules ?? []) {
+    const existing = await db.automationRule.findUnique({ where: { code: r.code } });
+    if (existing) continue;
+    await db.automationRule.create({
+      data: {
+        code: r.code,
+        name: r.name,
+        description: r.description ?? null,
+        trigger: r.trigger,
+        eventType: r.eventType ?? null,
+        cron: r.cron ?? null,
+        enqueueJob: r.enqueueJob,
+        priority: r.priority ?? 100,
+        enabled: true,
+      },
+    });
+    rulesCreated += 1;
+  }
+  if (rulesCreated) console.log(`  • تم إنشاء ${rulesCreated} قاعدة أتمتة`);
+}
+
 async function main() {
   console.log("\nتهيئة قاعدة بيانات دفاتر المحاسب\n" + "─".repeat(38));
   await seedUsers();
@@ -162,6 +227,7 @@ async function main() {
   await seedSequences();
   await seedSafes();
   await seedSettings();
+  await seedAutomation();
   console.log("─".repeat(38));
   console.log("تمت التهيئة بنجاح. شغّل الآن:  npm run dev\n");
 }

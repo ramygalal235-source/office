@@ -26,7 +26,11 @@ export function parsePagination(url: URL) {
   return { page, limit, skip, take: limit };
 }
 
+// سجل التدقيق: يكتب في AuditLog (للعرض) وفي EventLog (السلسلة المشفّرة).
+// الاستدعاء لا يُفشل العملية الأصلية أبدًا: فشل التدقيق يجب ألا يُسقط عملاً
+// تم فعله، لكنه لا يُخفى أيضًا — يُطبع في السجل.
 export async function auditLog(action: string, entity: string, entityId: string, details?: string, username?: string) {
+  const actor = username ?? "system";
   try {
     await db.auditLog.create({
       data: {
@@ -34,11 +38,25 @@ export async function auditLog(action: string, entity: string, entityId: string,
         entity,
         entityId,
         details: details ?? null,
-        username: username ?? "system",
+        username: actor,
       },
     });
   } catch (err) {
     console.error("Audit log error:", err);
+  }
+
+  try {
+    const { record } = await import("@/lib/automation/event-log");
+    await record({
+      action,
+      entity,
+      entityId,
+      summary: details ?? action,
+      actor,
+      actorType: actor === "system" ? "system" : "human",
+    });
+  } catch (err) {
+    console.error("Event log error:", err);
   }
 }
 

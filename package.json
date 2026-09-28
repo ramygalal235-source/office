@@ -15,7 +15,8 @@
     "db:generate": "prisma generate",
     "db:init": "node scripts/init-db.mjs",
     "postinstall": "prisma generate --schema=prisma/schema.prisma",
-    "check": "node scripts/check-imports.mjs"
+    "check": "node scripts/check-imports.mjs",
+    "check:schema": "python3 scripts/check-schema.py prisma/schema.prisma"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",

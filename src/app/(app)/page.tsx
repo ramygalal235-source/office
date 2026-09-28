@@ -31,6 +31,7 @@ import {
   taskStatusLabel,
 } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
+import { ControlTower } from "@/components/control-tower";
 
 function startOfMonth(d = new Date()) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -161,6 +162,8 @@ export default async function DashboardPage() {
           tone={sales - purchases >= 0 ? "success" : "destructive"}
         />
       </section>
+
+      <ControlTower />
 
       {/* ===== مؤشرات شغل المكتب ===== */}
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

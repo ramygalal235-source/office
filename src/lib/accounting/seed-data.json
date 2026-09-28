@@ -485,5 +485,73 @@
       "nextNumber": 1,
       "padding": 5
     }
+  ],
+  "automationRules": [
+    {
+      "code": "obligation.prepare_tasks",
+      "name": "توليد مهمة تحضير لكل التزام ضريبي",
+      "description": "عند تسجيل التزام جديد، تُنشأ مهمة التجهيز قبل موعده بأسبوعين.",
+      "trigger": "EVENT",
+      "eventType": "obligation.created",
+      "cron": null,
+      "enqueueJob": "obligation.prepare_tasks",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "code": "engagement.checklist",
+      "name": "توليد قائمة مهام ملف العمل",
+      "description": "عند إنشاء ملف عمل، تُولّد مهامه من قوالب الخدمة.",
+      "trigger": "EVENT",
+      "eventType": "engagement.created",
+      "cron": null,
+      "enqueueJob": "engagement.generate_checklist",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "code": "scan.sla_breaches",
+      "name": "فحص المهام المتأخرة",
+      "description": "تنبيه لكل مهمة تجاوزت موعد إنجازها.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "*/15 * * * *",
+      "enqueueJob": "sla.scan_breaches",
+      "priority": 100,
+      "enabled": true
+    },
+    {
+      "code": "scan.deadlines",
+      "name": "فحص الاستحقاقات القادمة",
+      "description": "تنبيه قبل كل استحقاق ضريبي بأسبوع.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "*/30 * * * *",
+      "enqueueJob": "deadline.scan_upcoming",
+      "priority": 100,
+      "enabled": true
+    },
+    {
+      "code": "ledger.trial_balance",
+      "name": "فحص توازن ميزان المراجعة",
+      "description": "ينبّه المدير إن أصبحت الميزانية غير متوازنة.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "0 * * * *",
+      "enqueueJob": "ledger.verify_trial_balance",
+      "priority": 120,
+      "enabled": true
+    },
+    {
+      "code": "audit.chain",
+      "name": "فحص سلامة سجل الأحداث",
+      "description": "يكشف أي عبث بسجل الأحداث عبر سلسلة التجزئة.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "0 2 * * *",
+      "enqueueJob": "audit.verify_chain",
+      "priority": 120,
+      "enabled": true
+    }
   ]
 }
