@@ -16,6 +16,7 @@ import {
   LogOut,
   Menu,
   Moon,
+  Package,
   PanelRightClose,
   PanelRightOpen,
   Receipt,
@@ -59,6 +60,7 @@ const ICONS: Record<string, LucideIcon> = {
   ArrowLeftRight,
   ScrollText,
   BarChart3,
+  Package,
   Settings,
 };
 

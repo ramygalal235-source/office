@@ -506,7 +506,7 @@ model StockMovement {
   id        String   @id @default(cuid())
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  type      String // IN مشتريات | OUT مبيعات | ADJUST تسوية | OPENING رصيد افتتاحي
+  type      String // IN مشتريات | OUT مبيعات | ADJUST تسوية | OPENING رصيد افتتاحي | RETURN_IN عكس مبيعات | RETURN_OUT عكس مشتريات
   quantity  Float
   unitCost  Float    @default(0)
   date      DateTime @default(now())

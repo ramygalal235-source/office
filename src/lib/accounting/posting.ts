@@ -188,6 +188,24 @@ export async function postInvoice(invoiceId: string, createdBy = "system") {
     data: { journalPosted: true, status: invoice.status === "DRAFT" ? "ISSUED" : invoice.status },
   });
 
+  try {
+    await applyStockMovements("INVOICE", invoice.id, "SALE", createdBy);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "خطأ غير متوقع";
+    await db.notification
+      .create({
+        data: {
+          kind: "JOB_FAILED",
+          severity: "critical",
+          title: "فشل تسجيل حركة مخزون",
+          body: `الفاتورة ${invoice.invoiceNumber} رُحّلت إلى قيود اليومية لكن حركتها بالمخزون فشلت: ${msg}. سُوِّيت يدويًا من شاشة المنتجات.`,
+          link: "/products",
+        },
+      })
+      .catch(() => {});
+    throw new PostingError("رُحّلت الفاتورة إلى قيود اليومية لكن حركة المخزون فشلت — سَوِّ المخزون من شاشة المنتجات");
+  }
+
   return entry;
 }
 
@@ -272,7 +290,82 @@ export async function postPurchase(purchaseId: string, createdBy = "system") {
     data: { journalPosted: true, status: purchase.status === "DRAFT" ? "RECEIVED" : purchase.status },
   });
 
+  try {
+    await applyStockMovements("PURCHASE", purchase.id, "PURCHASE", createdBy);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "خطأ غير متوقع";
+    await db.notification
+      .create({
+        data: {
+          kind: "JOB_FAILED",
+          severity: "critical",
+          title: "فشل تسجيل حركة مخزون",
+          body: `فاتورة الشراء ${purchase.purchaseNumber} رُحّلت إلى قيود اليومية لكن حركتها بالمخزون فشلت: ${msg}. سُوِّيت يدويًا من شاشة المنتجات.`,
+          link: "/products",
+        },
+      })
+      .catch(() => {});
+    throw new PostingError("رُحّلت فاتورة الشراء إلى قيود اليومية لكن حركة المخزون فشلت — سَوِّ المخزون من شاشة المنتجات");
+  }
+
   return entry;
+}
+
+// ===== المخزون: حركات مرتبطة بالترحيل والعكس =====
+// البيع يُنقص المخزون، والشراء يزيده، والعكس يعيده. كل حركة تُسجَّل في
+// StockMovement (قابلة للتتبع ومُسجَّل تاريخها) ويُحدَّث رصيد المنتج في نفس المعاملة.
+
+type StockKind = "SALE" | "PURCHASE" | "REVERSE_SALE" | "REVERSE_PURCHASE";
+
+const STOCK_DIRECTION: Record<StockKind, { delta: 1 | -1; type: string; note: string }> = {
+  SALE: { delta: -1, type: "OUT", note: "مبيعات" },
+  PURCHASE: { delta: 1, type: "IN", note: "مشتريات" },
+  REVERSE_SALE: { delta: 1, type: "RETURN_IN", note: "عكس مبيعات (إرجاع للمخزون)" },
+  REVERSE_PURCHASE: { delta: -1, type: "RETURN_OUT", note: "عكس مشتريات (خصم من المخزون)" },
+};
+
+async function applyStockMovements(
+  sourceType: "INVOICE" | "PURCHASE",
+  sourceId: string,
+  kind: StockKind,
+  createdBy: string
+): Promise<void> {
+  const isInvoice = sourceType === "INVOICE";
+  const doc = isInvoice
+    ? await db.invoice.findUnique({ where: { id: sourceId }, include: { items: true } })
+    : await db.purchase.findUnique({ where: { id: sourceId }, include: { items: true } });
+  if (!doc) return;
+
+  const items = (doc.items as { productId: string | null; quantity: number; unitPrice: number; costPrice?: number }[]).filter(
+    (i) => i.productId && i.quantity !== 0
+  );
+  if (!items.length) return;
+
+  const { delta, type, note } = STOCK_DIRECTION[kind];
+  const docNumber = (doc as { invoiceNumber?: string; purchaseNumber?: string }).invoiceNumber ?? (doc as { purchaseNumber?: string }).purchaseNumber ?? "";
+
+  await db.$transaction(async (tx) => {
+    for (const item of items) {
+      const qty = round2(delta * item.quantity);
+      const cost = kind === "PURCHASE" ? item.unitPrice : (item.costPrice ?? 0);
+      await tx.product.update({
+        where: { id: item.productId as string },
+        data: { quantity: { increment: qty } },
+      });
+      await tx.stockMovement.create({
+        data: {
+          productId: item.productId as string,
+          type,
+          quantity: qty,
+          unitCost: cost,
+          sourceType,
+          sourceId,
+          notes: `${note} — ${docNumber}`,
+          createdBy,
+        },
+      });
+    }
+  });
 }
 
 // ===== ترحيل سند القبض / الصرف =====
@@ -373,11 +466,21 @@ export async function reverseJournalEntry(entryId: string, createdBy = "system")
     await db.invoice
       .update({ where: { id: entry.sourceId }, data: { journalPosted: false } })
       .catch(() => {});
+    try {
+      await applyStockMovements("INVOICE", entry.sourceId, "REVERSE_SALE", createdBy);
+    } catch (e) {
+      console.error("فشل إرجاع المخزون عند عكس قيد فاتورة:", e);
+    }
   }
   if (entry.sourceType === "PURCHASE" && entry.sourceId) {
     await db.purchase
       .update({ where: { id: entry.sourceId }, data: { journalPosted: false } })
       .catch(() => {});
+    try {
+      await applyStockMovements("PURCHASE", entry.sourceId, "REVERSE_PURCHASE", createdBy);
+    } catch (e) {
+      console.error("فشل خصم المخزون عند عكس قيد مشتريات:", e);
+    }
   }
 
   return reverse;

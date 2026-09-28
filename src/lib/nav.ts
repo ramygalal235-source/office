@@ -33,6 +33,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/accounts", label: "دليل الحسابات", icon: "BookOpen" },
       { href: "/parties", label: "العملاء والموردون", icon: "Users" },
+      { href: "/products", label: "المنتجات والمخزون", icon: "Package" },
       { href: "/invoices", label: "فواتير البيع", icon: "Receipt" },
       { href: "/purchases", label: "فواتير الشراء", icon: "ShoppingCart" },
       { href: "/safes", label: "الخزائن والبنوك", icon: "Wallet" },
