@@ -142,3 +142,21 @@ export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
   APPROVED: "معتمدة",
   REJECTED: "مرفوضة",
 };
+
+// ===== ملفات العمل (إدارة الممارسة) =====
+export const ENGAGEMENT_STATUSES = ["PLANNING", "ACTIVE", "ON_HOLD", "CLOSED"] as const;
+
+export const ENGAGEMENT_STATUS_LABELS: Record<string, string> = {
+  PLANNING: "قيد التخطيط",
+  ACTIVE: "نشط",
+  ON_HOLD: "متوقف مؤقتًا",
+  CLOSED: "مغلق",
+};
+
+export const MEMBER_ROLES = ["LEAD", "REVIEWER", "MEMBER"] as const;
+
+export const MEMBER_ROLE_LABELS: Record<string, string> = {
+  LEAD: "مسؤول الملف",
+  REVIEWER: "مراجع",
+  MEMBER: "عضو",
+};

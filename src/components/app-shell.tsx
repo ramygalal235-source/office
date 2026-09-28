@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   BookOpen,
+  Briefcase,
   Building2,
   CalendarClock,
   FileScan,
@@ -45,6 +46,7 @@ import {
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard,
+  Briefcase,
   Building2,
   CalendarClock,
   FileScan,

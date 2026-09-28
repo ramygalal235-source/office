@@ -25,6 +25,7 @@ export const NAV: NavGroup[] = [
       { href: "/obligations", label: "الالتزامات الضريبية", icon: "CalendarClock" },
       { href: "/tasks", label: "المهام المُسندة", icon: "ListTodo" },
       { href: "/documents", label: "الوثائق والاستخراج", icon: "FileScan" },
+      { href: "/engagements", label: "ملفات العمل", icon: "Briefcase" },
     ],
   },
   {

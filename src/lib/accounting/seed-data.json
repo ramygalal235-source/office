@@ -484,6 +484,12 @@
       "prefix": "BDG-",
       "nextNumber": 1,
       "padding": 5
+    },
+    {
+      "type": "ENGAGEMENT",
+      "prefix": "ENG-",
+      "nextNumber": 1,
+      "padding": 5
     }
   ],
   "automationRules": [
