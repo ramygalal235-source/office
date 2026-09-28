@@ -93,7 +93,7 @@ function hashOf(prevHash: string, body: string): string {
 
 /**
  * يُضيف حدثًا للسجل ويربطه بالحدث السابق.
- * يتم كل شيء داخل معاملة واحدة حتى لا ي interruption سببين حدثين يقرآن
+ * يتم كل شيء داخل معاملة واحدة حتى لا يقرأ معالجان متزامنان
  * نفس الـ prevHash فيكسر السلسلة.
  */
 export async function appendEvent(input: EventInput) {

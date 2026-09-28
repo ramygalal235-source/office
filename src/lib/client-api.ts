@@ -7,6 +7,8 @@ export interface ApiResult<T = unknown> {
   data?: T;
   error?: string;
   status: number;
+  /** بيانات وصفية إضافية من الاستجابة (صفحات، إحصاءات…) */
+  meta?: Record<string, unknown>;
 }
 
 /** نداء موحّد للواجهة: يرجع النتيجة بدل رمي استثناء، ويعرض رسالة الخطأ */
@@ -32,7 +34,7 @@ export async function apiFetch<T = unknown>(
     }
 
     if (successMessage) toast.success(successMessage);
-    return { ok: true, data: json.data as T, status: res.status };
+    return { ok: true, data: json.data as T, status: res.status, meta: json.meta as Record<string, unknown> | undefined };
   } catch {
     const error = "تعذّر الاتصال بالخادم";
     if (!silent) toast.error(error);

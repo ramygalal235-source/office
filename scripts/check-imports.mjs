@@ -154,6 +154,9 @@ for (const file of files) {
     if (dataIdx === -1 || dataIdx - m.index > 4000) continue;
     const open = src.indexOf("{", dataIdx);
     if (open === -1) continue;
+    // data: متغير (ليس كائنًا محددًا) — لا نستطيع فحصه ساكنًا فنتركه
+    // وإلا نلتقط أول قوس في الملف التالي ونفهمه خطأً
+    if (src.slice(dataIdx + 5, open).replace(/\/\/[^\n]*/g, "").trim() !== "") continue;
     let depth = 0, end = -1;
     for (let i = open; i < src.length; i++) {
       if (src[i] === "{") depth++;

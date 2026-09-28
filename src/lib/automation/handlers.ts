@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { generateNumber } from "@/lib/accounting/api";
 import { round2 } from "@/lib/money";
 import { appendEvent } from "./event-log";
+import { runExtraction } from "@/lib/ocr";
 
 // ===== معالجات المهام =====
 //
@@ -259,3 +260,15 @@ export function getHandler(type: string): JobHandler | undefined {
 export function registeredJobTypes() {
   return Object.keys(handlers);
 }
+
+// ---------------------------------------------------------------- الاستخراج الآلي
+
+/** يستخرج بيانات وثيقة مرفوعة عبر نموذج بصري محلي */
+handlers["document.extract"] = async (payload) => {
+  const documentId = String(payload.documentId ?? "");
+  if (!documentId) throw new Error("documentId مطلوب");
+  return runExtraction(documentId, {
+    provider: payload.provider ? String(payload.provider) : undefined,
+    model: payload.model ? String(payload.model) : undefined,
+  });
+};

@@ -144,6 +144,10 @@ async function seedSettings() {
     { key: "tax.invoicePrefix", value: "INV-", group: "tax", label: "بادئة فواتير البيع" },
     { key: "fiscal.yearStartMonth", value: "1", group: "fiscal", label: "شهر بداية السنة المالية" },
     { key: "backup.autoOnExit", value: "false", group: "backup", label: "نسخة احتياطية عند الإغلاق" },
+    { key: "ocr.provider", value: "ollama", group: "ocr", label: "مزود الاستخراج (ollama | zai | custom)" },
+    { key: "ocr.model", value: "qwen2.5vl:7b", group: "ocr", label: "نموذج الاستخراج البصري" },
+    { key: "ocr.baseUrl.ollama", value: "http://127.0.0.1:11434/v1", group: "ocr", label: "عنوان Ollama المحلي" },
+    { key: "ocr.apiKey", value: "", group: "ocr", label: "مفتاح الاستخراج للمزود السحابي (إن لزم)" },
   ];
   for (const s of defaults) {
     await db.setting.upsert({

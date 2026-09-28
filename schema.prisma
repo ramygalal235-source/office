@@ -246,6 +246,8 @@ model Invoice {
   notes         String?
   createdBy     String     @default("system")
   journalPosted Boolean    @default(false)
+  sourceDocumentId String? // الوثيقة الأصلية في DMS التي استُخرِجت منها
+  sourceDocument DmsDocument? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
 
   items InvoiceItem[]
 
@@ -299,6 +301,8 @@ model Purchase {
   notes        String?
   createdBy    String     @default("system")
   journalPosted Boolean   @default(false)
+  sourceDocumentId String? // الوثيقة الأصلية في DMS التي استُخرِجت منها
+  sourceDocument DmsDocument? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
 
   items PurchaseItem[]
 
@@ -417,6 +421,8 @@ model Payment {
   reference String?
   sourceType String? // INVOICE | PURCHASE | OTHER
   sourceId   String?
+  sourceDocumentId String? // الوثيقة الأصلية في DMS التي استُخرِجت منها
+  sourceDocument DmsDocument? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
   notes      String?
   createdBy  String   @default("system")
   createdAt  DateTime @default(now())
@@ -872,6 +878,9 @@ model DmsDocument {
   versions   DmsDocumentVersion[]
   extractions Extraction[]
   timeEntries TimeEntry[]
+  invoices  Invoice[]
+  purchases Purchase[]
+  payments  Payment[]
 
   @@index([clientId])
   @@index([type, status])

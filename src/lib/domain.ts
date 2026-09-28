@@ -109,3 +109,36 @@ export const MONTHS = [
   "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
   "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
 ] as const;
+
+// ===== أنواع الوثائق وحالاتها في DMS =====
+export const DOCUMENT_TYPES = [
+  "INVOICE",
+  "PURCHASE_INVOICE",
+  "RECEIPT",
+  "BANK_STATEMENT",
+  "CONTRACT",
+  "ID",
+  "TAX_FORM",
+  "OTHER",
+] as const;
+
+export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  INVOICE: "فاتورة بيع",
+  PURCHASE_INVOICE: "فاتورة شراء",
+  RECEIPT: "إيصال",
+  BANK_STATEMENT: "كشف حساب بنكي",
+  CONTRACT: "عقد",
+  ID: "بطاقة ضريبية / هوية",
+  TAX_FORM: "بيان ضريبي",
+  OTHER: "أخرى",
+};
+
+export const DOCUMENT_STATUSES = ["UPLOADED", "EXTRACTING", "REVIEW", "APPROVED", "REJECTED"] as const;
+
+export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
+  UPLOADED: "بانتظار الاستخراج",
+  EXTRACTING: "جارٍ الاستخراج",
+  REVIEW: "بانتظار المراجعة",
+  APPROVED: "معتمدة",
+  REJECTED: "مرفوضة",
+};
