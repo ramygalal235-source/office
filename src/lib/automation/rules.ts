@@ -105,7 +105,7 @@ function safeParse(s: string | null): Record<string, unknown> {
 // cron مبسّط من خمسة حقول: دقيقة، ساعة، يوم، شهر، يوم-الأسبوع
 // يدعم: * و */n و n,n,n و n-m. يكفي لتشغيل النظام كل خمس دقائق.
 
-function cronMatches(expr: string, at: Date): boolean {
+export function cronMatches(expr: string, at: Date): boolean {
   const fields = expr.trim().split(/\s+/);
   if (fields.length !== 5) return false;
 

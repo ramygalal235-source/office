@@ -106,11 +106,23 @@ interface RawField {
 
 function toNumber(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v;
-  if (typeof v === "string") {
-    const n = parseFloat(v.replace(/[,\sج.ن.ل.م]/gu, ""));
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
+  if (typeof v !== "string") return null;
+  let s = v.trim();
+  if (!s) return null;
+  // توحيد الأرقام الهندية-العربية (٠-٩) والممتدة (۰-۹) إلى لاتينية
+  s = s
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+  // إزالة كلمات/رموز العملة
+  s = s.replace(/ج\.?م\.?|EGP|E\.G\.P|pound|جنيه|ليرة/gi, "");
+  // فواصل الآلاف: الفاصلة اللاتينية والفواصل العربية (، ٬) والمسافات
+  s = s.replace(/[,\u060c\u066c\s]/g, "");
+  // فاصل العشرية العربي (٫) إلى نقطة
+  s = s.replace(/٫/g, ".");
+  const m = s.match(/-?\d+(\.\d+)?/);
+  if (!m) return null;
+  const n = parseFloat(m[0]);
+  return Number.isFinite(n) ? n : null;
 }
 
 function toStr(v: unknown): string | null {

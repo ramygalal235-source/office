@@ -6,7 +6,12 @@
 /** تقريب لخانتين عشريتين بأسلوب مالي (HALF_UP) يتجنّب أخطاء الفاصلة العائمة */
 export function round2(n: number): number {
   if (!Number.isFinite(n)) return 0;
-  return Math.round((n + Number.EPSILON) * 100) / 100;
+  if (n === 0) return 0;
+  // نقرّب على التمثيل العشري لا الثنائي: Math.round(1.005*100) يعطي 100 لأن
+  // 1.005 مخزّن أخفض من ذلك في الثنائي — دقة 12 رقمًا تكشف القيمة العشرية الفعلية.
+  const sign = n < 0 ? -1 : 1;
+  const rounded = Math.round(Number((Math.abs(n) * 100).toPrecision(12)));
+  return sign * (rounded / 100);
 }
 
 export function roundAll(values: number[]): number[] {

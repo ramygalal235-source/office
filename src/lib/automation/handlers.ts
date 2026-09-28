@@ -224,7 +224,7 @@ handlers["ledger.verify_trial_balance"] = async () => {
   });
 
   await appendEvent({
-    action: "ledger.unbalanced",
+    action: "UNBALANCED",
     entity: "Ledger",
     entityId: "trial_balance",
     actorType: "system",

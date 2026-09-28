@@ -27,6 +27,7 @@ const ENTITY_SLUG: Record<string, string> = {
   Purchase: "purchase",
   Payment: "payment",
   JournalEntry: "journal",
+  Ledger: "ledger",
   Account: "account",
   Party: "party",
   Safe: "safe",
