@@ -52,7 +52,7 @@ function check(name, cond, detail = "") {
 
   const handlersSrc = read("src/lib/automation/handlers.ts");
   const handlerKeys = [...handlersSrc.matchAll(/handlers\["([^"]+)"\]\s*=/g)].map((m) => m[1]);
-  check("handlers/7 معالجات", handlerKeys.length === 7, `حصلنا على ${handlerKeys.length}: ${handlerKeys.join(",")}`);
+  check("handlers/9 معالجات", handlerKeys.length === 9, `حصلنا على ${handlerKeys.length}: ${handlerKeys.join(",")}`);
   check("handlers/مفاتيح فريدة", new Set(handlerKeys).size === handlerKeys.length);
 
   for (const r of rules) {

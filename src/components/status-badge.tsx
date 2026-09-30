@@ -52,6 +52,14 @@ const JOURNAL_STATUS: Record<string, { label: string; variant: Variant }> = {
   REVERSED: { label: "معكوس", variant: "warning" },
 };
 
+const ETA_STATUS: Record<string, { label: string; variant: Variant }> = {
+  PENDING: { label: "بانتظار الإرسال", variant: "muted" },
+  SUBMITTED: { label: "قيد التحقق بالهيئة", variant: "info" },
+  ACCEPTED: { label: "مقبولة بالهيئة", variant: "success" },
+  REJECTED: { label: "مرفوضة من الهيئة", variant: "destructive" },
+  FAILED: { label: "فشل الإرسال", variant: "destructive" },
+};
+
 const ENTITY_TYPE: Record<string, string> = {
   COMPANY: "شركة",
   INDIVIDUAL: "منشأة فردية",
@@ -85,6 +93,7 @@ export const obligationStatusLabel = mapFrom(OBLIGATION_STATUS);
 export const taskStatusLabel = mapFrom(TASK_STATUS);
 export const priorityLabel = mapFrom(PRIORITY);
 export const journalStatusLabel = mapFrom(JOURNAL_STATUS);
+export const etaStatusLabel = mapFrom(ETA_STATUS);
 
 export const entityTypeLabel = (key: string | null | undefined) =>
   (key && ENTITY_TYPE[key]) || "—";

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { invoiceStatusLabel } from "@/components/status-badge";
+import { etaStatusLabel, invoiceStatusLabel } from "@/components/status-badge";
 import { DocumentForm } from "./document-form";
 import { DocumentRowActions } from "./document-row-actions";
 
@@ -47,7 +47,7 @@ export default async function InvoicesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="فواتير البيع"
-        description="فواتير العملاء وم consequال ترحيلها إلى قيود اليومية."
+        description="فواتير العملاء ومتابعة ترحيلها إلى قيود اليومية والفوترة الإلكترونية."
         actions={
           <DocumentForm
             kind="invoice"
@@ -91,6 +91,7 @@ export default async function InvoicesPage() {
                   <TableHead className="text-start">الضريبة</TableHead>
                   <TableHead>الترحيل</TableHead>
                   <TableHead>الحالة</TableHead>
+                  <TableHead>الهيئة</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -119,6 +120,15 @@ export default async function InvoicesPage() {
                         <Badge variant={st.variant}>{st.label}</Badge>
                       </TableCell>
                       <TableCell>
+                        {inv.etaStatus ? (
+                          <Badge variant={etaStatusLabel(inv.etaStatus).variant} title={inv.etaError ?? undefined}>
+                            {etaStatusLabel(inv.etaStatus).label}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <DocumentRowActions
                           id={inv.id}
                           endpoint="/api/invoices"
@@ -135,6 +145,8 @@ export default async function InvoicesPage() {
                           }}
                           canPost={session?.role !== "viewer"}
                           canDelete={isAdmin}
+                          eta={{ status: inv.etaStatus }}
+                          canEta={isAdmin}
                         />
                       </TableCell>
                     </TableRow>

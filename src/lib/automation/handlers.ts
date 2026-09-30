@@ -253,6 +253,24 @@ handlers["audit.verify_chain"] = async () => {
   return result;
 };
 
+// ---------------------------------------------------------------- الفوترة الإلكترونية (ETA)
+
+/** عند ترحيل فاتورة بيع: إرسالها إلى هيئة الضرائب (إصدار 0.9).
+ * آمن لإعادة التنفيذ: الفاتورة المرسلة لا تُرسل مرتين. */
+handlers["eta.submit_invoice"] = async (payload) => {
+  const invoiceId = String(payload.invoiceId ?? "");
+  if (!invoiceId) throw new Error("invoiceId مطلوب");
+  const { submitInvoiceToEta } = await import("@/lib/eta/service");
+  const result = await submitInvoiceToEta(invoiceId, "automation:eta.auto_submit");
+  return { ...result, skipped: result.skipped ?? false };
+};
+
+/** استطلاع دوري: تحديث حالة الفواتير المرسلة لدى الهيئة */
+handlers["eta.poll_statuses"] = async () => {
+  const { pollEtaStatuses } = await import("@/lib/eta/service");
+  return pollEtaStatuses();
+};
+
 export function getHandler(type: string): JobHandler | undefined {
   return handlers[type];
 }

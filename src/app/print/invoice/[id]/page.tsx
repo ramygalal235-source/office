@@ -48,6 +48,11 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
         total={invoice.totalAmount}
         paid={invoice.paidAmount || undefined}
         notes={invoice.notes}
+        eta={
+          (invoice.etaStatus === "ACCEPTED" || invoice.etaStatus === "SUBMITTED") && invoice.etaDocUuid
+            ? { uuid: invoice.etaDocUuid, label: "مرجع هيئة الضرائب (رقم الفاتورة الإلكترونية)" }
+            : null
+        }
       />
       <AutoPrint />
     </div>

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Loader2, MoreHorizontal, Printer, Send, Trash2 } from "lucide-react";
-import { apiFetch } from "@/lib/client-api";
+import { Eye, Landmark, Loader2, MoreHorizontal, Printer, RefreshCw, Send, Trash2 } from "lucide-react";
+import { apiFetch, jsonBody } from "@/lib/client-api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,12 +41,17 @@ export function DocumentRowActions({
   doc,
   canPost,
   canDelete,
+  eta,
+  canEta,
 }: {
   id: string;
   endpoint: string;
   doc: Doc;
   canPost: boolean;
   canDelete: boolean;
+  // حالة الفاتورة لدى هيئة الضرائب — تُمرَّر لفواتير البيع فقط
+  eta?: { status: string | null };
+  canEta?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -66,6 +72,24 @@ export function DocumentRowActions({
   function printDoc() {
     const kind = endpoint.includes("invoices") ? "invoice" : "purchase";
     window.open(`/print/${kind}/${id}`, "_blank");
+  }
+
+  async function etaAction(action: "submit" | "refresh") {
+    if (busy) return;
+    if (action === "submit" && !confirm("إرسال هذه الفاتورة إلى هيئة الضرائب (ETA)؟")) return;
+    setBusy(true);
+    const res = await apiFetch<{ message: string }>(`${endpoint}/${id}/eta`, {
+      method: "POST",
+      ...jsonBody({ action }),
+      silent: true,
+    });
+    if (res.ok && res.data) {
+      if (res.data.message) toast(res.data.message);
+    } else {
+      toast.error(res.error ?? "تعذّر الإجراء");
+    }
+    router.refresh();
+    setBusy(false);
   }
 
   async function remove() {
@@ -98,6 +122,24 @@ export function DocumentRowActions({
             <DropdownMenuItem onClick={post}>
               <Send />
               ترحيل إلى اليومية
+            </DropdownMenuItem>
+          )}
+          {eta && canEta && doc.journalPosted && eta.status === null && (
+            <DropdownMenuItem onClick={() => etaAction("submit")}>
+              <Landmark />
+              إرسال إلى الهيئة (ETA)
+            </DropdownMenuItem>
+          )}
+          {eta && canEta && doc.journalPosted && eta.status !== null && eta.status !== "ACCEPTED" && (
+            <DropdownMenuItem onClick={() => etaAction("refresh")}>
+              <RefreshCw />
+              تحديث حالة الهيئة
+            </DropdownMenuItem>
+          )}
+          {eta && eta.status === "ACCEPTED" && (
+            <DropdownMenuItem disabled>
+              <Landmark />
+              مقبولة لدى الهيئة
             </DropdownMenuItem>
           )}
           {canDelete && !doc.journalPosted && (

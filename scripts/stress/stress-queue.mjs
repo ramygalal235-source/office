@@ -141,7 +141,7 @@ function check(name, cond, detail = "") {
   __reset();
   await rules.seedDefaultRules();
   const ruleCount = [...__stores().automationRule.values()].length;
-  check("rules/6 قواعد افتراضية", ruleCount === 6, `حصلنا على ${ruleCount}`);
+  check("rules/8 قواعد افتراضية", ruleCount === 8, `حصلنا على ${ruleCount}`);
 
   // حدث CREATE على التزام → قاعدة obligation.prepare_tasks → مهمة
   const ev = await eventLog.record({ action: "CREATE", entity: "TaxObligation", entityId: "ob-1", summary: "التزام جديد" });

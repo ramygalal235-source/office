@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOfficeBrand } from "@/lib/office-brand";
+import { getEtaSettings } from "@/lib/eta/client";
 import { getOcrSettings, isOcrAvailable } from "@/lib/ocr/engine";
 import { queueStats } from "@/lib/automation/queue";
 import { verifyChain } from "@/lib/automation/event-log";
@@ -15,12 +16,13 @@ export default async function SettingsPage() {
   if (!session) redirect("/login");
   if (session.role !== "admin") redirect("/");
 
-  const [brand, ocr, stats, chain, counts, lastBackup, users] = await Promise.all([
+  const [brand, ocr, etaRaw, stats, chain, counts, lastBackup, users] = await Promise.all([
     getOfficeBrand(),
     (async () => {
       const s = await getOcrSettings();
       return { ...s, available: await isOcrAvailable(s) };
     })(),
+    getEtaSettings(),
     queueStats(),
     verifyChain(1000),
     (async () => {
@@ -56,6 +58,11 @@ export default async function SettingsPage() {
       <SettingsBoard
         brand={brand}
         ocr={ocr}
+        eta={{
+          ...etaRaw,
+          clientSecret: etaRaw.clientSecret ? (etaRaw.clientSecret.length > 4 ? `••••${etaRaw.clientSecret.slice(-4)}` : "••••") : "",
+          hasSecret: etaRaw.clientSecret.length > 0,
+        }}
         stats={stats}
         chain={{ ok: chain.ok, checked: chain.checked, breaks: chain.breaks.length }}
         counts={counts}

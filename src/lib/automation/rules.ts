@@ -205,7 +205,8 @@ export async function seedDefaultRules() {
         cron: rule.cron ?? null,
         enqueueJob: rule.enqueueJob,
         priority: rule.priority,
-        enabled: true,
+        // بعض القواعد (مثل إرسال الهيئة) تُبذَر معطَّلة حتى يكتمل إعدادها
+        enabled: rule.enabled ?? true,
       },
     });
     created += 1;

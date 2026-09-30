@@ -5,11 +5,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Activity,
   AlertTriangle,
   Database,
   Download,
   FileWarning,
   KeyRound,
+  Landmark,
+  Play,
   ScanText,
   ServerCog,
   ShieldCheck,
@@ -49,6 +52,19 @@ interface OcrState {
   baseUrl: string;
   apiKey: string;
   available: boolean;
+}
+
+interface EtaState {
+  environment: string;
+  clientId: string;
+  clientSecret: string;
+  taxNumber: string;
+  branchId: string;
+  activityCode: string;
+  governorate: string;
+  unitType: string;
+  serviceCode: string;
+  hasSecret: boolean;
 }
 
 interface Stats {
@@ -94,6 +110,7 @@ const PROVIDER_LABELS: Record<string, string> = { ollama: "Ollama (محلي)", z
 export function SettingsBoard({
   brand,
   ocr: initialOcr,
+  eta: initialEta,
   stats,
   chain,
   counts,
@@ -102,6 +119,7 @@ export function SettingsBoard({
 }: {
   brand: OfficeBrand;
   ocr: OcrState;
+  eta: EtaState;
   stats: Stats;
   chain: ChainState;
   counts: Counts;
@@ -214,6 +232,37 @@ export function SettingsBoard({
     if (res.ok && res.data) setOcrTest(res.data);
   }
 
+  // ---------------- الفوترة الإلكترونية (هيئة الضرائب) ----------------
+  const [eta, setEta] = useState<EtaState>(initialEta);
+  const [savingEta, setSavingEta] = useState(false);
+  const [testingEta, setTestingEta] = useState(false);
+  const [etaTest, setEtaTest] = useState<{ ok: boolean; message: string } | null>(null);
+
+  async function saveEta() {
+    setSavingEta(true);
+    const res = await apiFetch<{ clientSecret: string; hasSecret: boolean } & EtaState>("/api/settings/eta", {
+      method: "PUT",
+      ...jsonBody(eta),
+      successMessage: "تم حفظ إعدادات الفوترة الإلكترونية",
+    });
+    setSavingEta(false);
+    if (res.ok && res.data) {
+      setEta((prev) => ({ ...prev, ...res.data!, clientSecret: prev.clientSecret }));
+      setEtaTest(null);
+    }
+  }
+
+  async function testEta() {
+    setSavingEta(true);
+    const save = await apiFetch("/api/settings/eta", { method: "PUT", ...jsonBody(eta), silent: true });
+    setSavingEta(false);
+    if (!save.ok) return;
+    setTestingEta(true);
+    const res = await apiFetch<{ ok: boolean; message: string }>("/api/settings/eta", { method: "POST" });
+    setTestingEta(false);
+    if (res.ok && res.data) setEtaTest(res.data);
+  }
+
   // ---------------- النسخ الاحتياطي ----------------
   const [exporting, setExporting] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -267,7 +316,7 @@ export function SettingsBoard({
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">الإعدادات</h1>
-        <p className="mt-1 text-sm text-muted-foreground">إدارة المكتب والمستخدمين والأمان والنسخ الاحتياطي</p>
+        <p className="mt-1 text-sm text-muted-foreground">إدارة المكتب والمستخدمين والأمان والفوترة الإلكترونية والنسخ الاحتياطي</p>
       </div>
 
       <Tabs defaultValue="office">
@@ -276,6 +325,7 @@ export function SettingsBoard({
           <TabsTrigger value="users" className="gap-1.5"><Users className="size-3.5" />المستخدمون</TabsTrigger>
           <TabsTrigger value="security" className="gap-1.5"><ShieldCheck className="size-3.5" />الأمان</TabsTrigger>
           <TabsTrigger value="ocr" className="gap-1.5"><ScanText className="size-3.5" />الذكاء المستندي</TabsTrigger>
+          <TabsTrigger value="eta" className="gap-1.5"><Landmark className="size-3.5" />الفوترة الإلكترونية</TabsTrigger>
           <TabsTrigger value="backup" className="gap-1.5"><Database className="size-3.5" />النسخ الاحتياطي</TabsTrigger>
           <TabsTrigger value="status" className="gap-1.5"><Activity className="size-3.5" />حالة النظام</TabsTrigger>
         </TabsList>
@@ -456,6 +506,101 @@ export function SettingsBoard({
                 واحدة من ollama.com ثم يُحمَّل النموذج: <code dir="ltr">ollama pull qwen2.5vl:7b</code>. عند التغيير إلى
                 مزود سحابي يُملأ العنوان والمفتاح ويُختبر الاتصال.
               </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ================= الفوترة الإلكترونية (هيئة الضرائب) ================= */}
+        <TabsContent value="eta">
+          <Card>
+            <CardHeader>
+              <CardTitle>الفوترة الإلكترونية — هيئة الضرائب المصرية (ETA)</CardTitle>
+              <CardDescription>
+                إرسال فواتير البيع إلى الهيئة بصيغة الإصدار 0.9 (بلا توقيع إلكتروني بعد) ومتابعة حالتها حتى القبول أو الرفض
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label>البيئة</Label>
+                  <Select value={eta.environment} onValueChange={(v) => setEta({ ...eta, environment: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="test">الاختبار (preprod) — للبروفة قبل الإطلاق</SelectItem>
+                      <SelectItem value="prod">الإنتاج — إرسال فعلي ملزم</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>معرف العميل (Client ID)</Label>
+                  <Input value={eta.clientId} onChange={(e) => setEta({ ...eta, clientId: e.target.value })} dir="ltr" placeholder="من بوابة ETA" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>سر العميل (Client Secret)</Label>
+                  <Input
+                    type="password"
+                    value={eta.clientSecret}
+                    onChange={(e) => setEta({ ...eta, clientSecret: e.target.value })}
+                    dir="ltr"
+                    placeholder={eta.hasSecret ? "•••• (سارٍ — اتركه فارغًا للإبقاء)" : "••••••••"}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>الرقم الضريبي (11 رقمًا)</Label>
+                  <Input value={eta.taxNumber} onChange={(e) => setEta({ ...eta, taxNumber: e.target.value.replace(/\D/g, "") })} dir="ltr" maxLength={11} placeholder="11 رقمًا" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>رقم الفرع (0 لو الفرع الوحيد)</Label>
+                  <Input value={eta.branchId} onChange={(e) => setEta({ ...eta, branchId: e.target.value })} dir="ltr" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>كود النشاط الضريبي</Label>
+                  <Input value={eta.activityCode} onChange={(e) => setEta({ ...eta, activityCode: e.target.value })} dir="ltr" placeholder="مثل 9478" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>كود المحافظة</Label>
+                  <Input value={eta.governorate} onChange={(e) => setEta({ ...eta, governorate: e.target.value })} dir="ltr" placeholder="الإسكندرية: 014" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>كود وحدة القياس</Label>
+                  <Input value={eta.unitType} onChange={(e) => setEta({ ...eta, unitType: e.target.value })} dir="ltr" placeholder="001 = قطعة" />
+                </div>
+              </div>
+
+              {etaTest && (
+                <div
+                  className={`flex items-start gap-2 rounded-md border p-3 text-sm ${
+                    etaTest.ok ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200" : "border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
+                  }`}
+                >
+                  <TestDiag className="mt-0.5 size-4 shrink-0" />
+                  <p>{etaTest.message}</p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={testEta} disabled={testingEta}>{testingEta ? "جارٍ الاختبار..." : "اختبار الاتصال"}</Button>
+                <Button variant="outline" onClick={saveEta} disabled={savingEta}>{savingEta ? "جارٍ الحفظ..." : "حفظ الإعدادات"}</Button>
+              </div>
+
+              <Separator />
+              <ol className="list-inside list-decimal space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+                <li>
+                  البيانات تُستخرج من <b>بوابة هيئة الضرائب</b>: الملف الضريبي ← الوكلاء ← تسجيل نظام (ERP) — تحصل على
+                  Client ID و Client Secret لكل جهة ضريبية تخدمها.
+                </li>
+                <li>
+                  ابدأ ببيئة <b>الاختبار</b> وجرّب فاتورة حقيقية، ثم انقل الإعداد إلى الإنتاج.
+                </li>
+                <li>
+                  تفعيل الإرسال التلقائي يتم من شاشة <b>الأتمتة</b> (قاعدة «إرسال الفاتورة للهيئة تلقائيًا» وقاعدة متابعة
+                  الحالة) — القاعدتان معطّلتان حتى تكتمل هذه الإعدادات.
+                </li>
+                <li>
+                  الإصدار الحالي <b>0.9</b> بلا توقيع — إرسال الإنتاج الفعلي (إصدار 1.0) يتطلب ختمًا إلكترونيًا
+                  (eSeal، نوع CAdES-BES) صادرًا من جهة اعتماد مصرية باسم الرقم الضريبي.
+                </li>
+              </ol>
             </CardContent>
           </Card>
         </TabsContent>

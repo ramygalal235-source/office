@@ -30,6 +30,7 @@ export function PrintDocument({
   total,
   paid,
   notes,
+  eta,
 }: {
   brand: OfficeBrand;
   title: string;
@@ -47,6 +48,7 @@ export function PrintDocument({
   total: number;
   paid?: number;
   notes?: string | null;
+  eta?: { uuid: string; label: string } | null;
 }) {
   const remaining = round2(total - (paid ?? 0));
 
@@ -87,6 +89,12 @@ export function PrintDocument({
           <div className="print-doc-meta-item">
             <span>العميل (المكتب)</span>
             <b>{company}</b>
+          </div>
+        ) : null}
+        {eta ? (
+          <div className="print-doc-meta-item">
+            <span>{eta.label}</span>
+            <b dir="ltr">{eta.uuid}</b>
           </div>
         ) : null}
       </section>

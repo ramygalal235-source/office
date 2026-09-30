@@ -249,11 +249,19 @@ model Invoice {
   sourceDocumentId String? // الوثيقة الأصلية في DMS التي استُخرِجت منها
   sourceDocument DmsDocument? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
 
+  // ===== الفوترة الإلكترونية — هيئة الضرائب المصرية (ETA) =====
+  etaStatus      String?  // PENDING | SUBMITTED | ACCEPTED | REJECTED | FAILED
+  etaDocUuid     String?  // الرقم المرجعي الذي تسنده الهيئة للمستند
+  etaSubmission  String?  // رقم دفعة الإرسال (submissionUUID)
+  etaStatusAt    DateTime?
+  etaError       String?  // سبب الرفض/الفشل من الهيئة
+
   items InvoiceItem[]
 
   @@index([status])
   @@index([date])
   @@index([customerId])
+  @@index([etaStatus])
 }
 
 model InvoiceItem {

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getSafeBalances } from "@/lib/accounting/ledger";
+import { getPartyBalances, getSafeBalances } from "@/lib/accounting/ledger";
 import { dueLabel, formatDate, formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -32,6 +32,7 @@ import {
 } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { ControlTower } from "@/components/control-tower";
+import { DashboardCharts } from "@/components/dashboard-charts";
 
 function startOfMonth(d = new Date()) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -60,6 +61,9 @@ export default async function DashboardPage() {
     payables,
     recentEntries,
     safeList,
+    revenueRows,
+    customerBalances,
+    obligationRows,
   ] = await Promise.all([
     db.clientCompany.count(),
     db.clientCompany.count({ where: { isActive: true } }),
@@ -103,13 +107,69 @@ export default async function DashboardPage() {
       select: { id: true, number: true, date: true, description: true, status: true },
     }),
     getSafeBalances(),
+    // بيانات الرسوم البيانية
+    db.invoice.findMany({
+      where: { date: { gte: new Date(now.getFullYear(), now.getMonth() - 11, 1) }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      select: { date: true, subtotal: true, taxAmount: true },
+    }),
+    getPartyBalances("CUSTOMER"),
+    db.taxObligation.findMany({
+      where: { dueDate: { lte: new Date(now.getFullYear(), now.getMonth() + 6, 0) }, status: { in: ["PENDING", "IN_PROGRESS", "OVERDUE"] } },
+      select: { dueDate: true },
+    }),
   ]);
+
 
   const sales = monthInvoices._sum.totalAmount ?? 0;
   const purchases = monthPurchases._sum.totalAmount ?? 0;
   const cashTotal = sumMoney(safeList.map((s) => s.balance));
   const receivable = round2((receivables._sum.totalAmount ?? 0) - (receivables._sum.paidAmount ?? 0));
   const payable = round2((payables._sum.totalAmount ?? 0) - (payables._sum.paidAmount ?? 0));
+
+  // ===== بيانات الرسوم البيانية =====
+  const monthLabels: { label: string; key: string }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    monthLabels.push({ label: d.toLocaleDateString("ar-EG", { month: "short" }), key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` });
+  }
+  const monthlyRevenue = monthLabels.map((m) => ({ ...m, net: 0, tax: 0 }));
+  for (const inv of revenueRows) {
+    const key = `${new Date(inv.date).getFullYear()}-${String(new Date(inv.date).getMonth() + 1).padStart(2, "0")}`;
+    const slot = monthlyRevenue.find((x) => x.key === key);
+    if (slot) {
+      slot.net = round2(slot.net + inv.subtotal);
+      slot.tax = round2(slot.tax + inv.taxAmount);
+    }
+  }
+
+  const receivablesTop = customerBalances
+    .filter((c) => c.balance > 0)
+    .sort((a, b) => b.balance - a.balance)
+    .slice(0, 8)
+    .map((c) => ({ name: c.name, balance: c.balance }));
+
+  const obBuckets: { label: string; start: number; end: number; upcoming: number; overdue: number }[] = [];
+  for (let i = 0; i < 6; i++) {
+    const start = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
+    obBuckets.push({
+      label: start.toLocaleDateString("ar-EG", { month: "short" }),
+      start: start.getTime(),
+      end: end.getTime(),
+      upcoming: 0,
+      overdue: 0,
+    });
+  }
+  for (const o of obligationRows) {
+    const t = new Date(o.dueDate).getTime();
+    if (t < now.getTime()) {
+      obBuckets[0].overdue++;
+    } else {
+      const b = obBuckets.find((x) => t >= x.start && t < x.end);
+      if (b) b.upcoming++;
+    }
+  }
+  const obligationsChart = obBuckets.map((b) => ({ month: b.label, upcoming: b.upcoming, overdue: b.overdue }));
 
   const hour = now.getHours();
   const greeting = hour < 12 ? "صباح الخير" : hour < 17 ? "مساء الخير" : "مساء الخير";
@@ -195,6 +255,12 @@ export default async function DashboardPage() {
           tone={receivable > 0 ? "info" : "default"}
         />
       </section>
+
+      <DashboardCharts
+        monthlyRevenue={monthlyRevenue.map(({ month, net, tax }) => ({ month, net, tax }))}
+        receivables={receivablesTop}
+        obligations={obligationsChart}
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* ===== الالتزامات القادمة ===== */}

@@ -558,6 +558,28 @@
       "enqueueJob": "audit.verify_chain",
       "priority": 120,
       "enabled": true
+    },
+    {
+      "code": "eta.auto_submit",
+      "name": "إرسال الفاتورة للهيئة تلقائيًا",
+      "description": "عند ترحيل فاتورة بيع، تُرسل إلى هيئة الضرائب (ETA) بصيغة 0.9. تُفعَّل بعد ضبط بيانات العميل في الإعدادات.",
+      "trigger": "EVENT",
+      "eventType": "invoice.posted",
+      "cron": null,
+      "enqueueJob": "eta.submit_invoice",
+      "priority": 80,
+      "enabled": false
+    },
+    {
+      "code": "eta.poll_statuses",
+      "name": "متابعة حالة فواتير الهيئة",
+      "description": "كل 10 دقائق: تحديث حالة الفواتير المرسلة إلى هيئة الضرائب من «قيد التحقق» إلى «مقبولة» أو «مرفوضة».",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "*/10 * * * *",
+      "enqueueJob": "eta.poll_statuses",
+      "priority": 90,
+      "enabled": false
     }
   ]
 }
