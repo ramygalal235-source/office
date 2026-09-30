@@ -47,6 +47,6 @@ export const NAV: NavGroup[] = [
   },
   {
     title: "الإدارة",
-    items: [{ href: "/settings", disabled: true, label: "الإعدادات", icon: "Settings", adminOnly: true }],
+    items: [{ href: "/settings", label: "الإعدادات", icon: "Settings", adminOnly: true }],
   },
 ];

@@ -66,11 +66,15 @@ const ICONS: Record<string, LucideIcon> = {
 
 export function AppShell({
   user,
+  brand,
   children,
 }: {
   user: { name: string; username: string; role: string };
+  /** هوية المكتب الديناميكية (تُعدَّل من الإعدادات) مع BRAND احتياطًا */
+  brand?: { name: string; subtitle: string; primary: string };
   children: React.ReactNode;
 }) {
+  const b = brand ?? BRAND;
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -99,14 +103,14 @@ export function AppShell({
       <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4">
         <div
           className="flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-primary-foreground"
-          style={{ backgroundColor: BRAND.primary }}
+          style={{ backgroundColor: b.primary }}
         >
           د
         </div>
         {!collapsed && (
           <div className="flex min-w-0 flex-col leading-tight">
-            <span className="truncate text-sm font-bold">{BRAND.name}</span>
-            <span className="truncate text-[11px] text-muted-foreground">{BRAND.subtitle}</span>
+            <span className="truncate text-sm font-bold">{b.name}</span>
+            <span className="truncate text-[11px] text-muted-foreground">{b.subtitle}</span>
           </div>
         )}
       </div>
