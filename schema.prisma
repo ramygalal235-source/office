@@ -548,9 +548,11 @@ model FixedAsset {
   depreciationAccountId String? // حساب مصروف الإهلاك
   depreciationAccount Account? @relation("AssetDepreciationAccount", fields: [depreciationAccountId], references: [id], onDelete: SetNull)
   status        String   @default("ACTIVE") // ACTIVE | DISPOSED
-  disposalDate  DateTime?
-  notes         String?
-  createdAt     DateTime @default(now())
+  acquisitionPosted Boolean @default(false) // قيد الاستحواذ مرحّل إلى اليومية
+  disposalDate     DateTime?
+  disposalProceeds Float? // قيمة البيع عند الصرف
+  notes            String?
+  createdAt        DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   depreciations DepreciationEntry[]

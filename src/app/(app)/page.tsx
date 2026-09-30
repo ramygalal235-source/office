@@ -1,11 +1,14 @@
 import Link from "next/link";
 import {
   ArrowLeftRight,
+  Banknote,
+  Boxes,
   Building2,
   CalendarClock,
   ListTodo,
   TrendingDown,
   TrendingUp,
+  UserRound,
   Wallet,
 } from "lucide-react";
 import { getSession } from "@/lib/auth";
@@ -64,6 +67,9 @@ export default async function DashboardPage() {
     revenueRows,
     customerBalances,
     obligationRows,
+    assetAgg,
+    employeeAgg,
+    latestPayroll,
   ] = await Promise.all([
     db.clientCompany.count(),
     db.clientCompany.count({ where: { isActive: true } }),
@@ -117,7 +123,23 @@ export default async function DashboardPage() {
       where: { dueDate: { lte: new Date(now.getFullYear(), now.getMonth() + 6, 0) }, status: { in: ["PENDING", "IN_PROGRESS", "OVERDUE"] } },
       select: { dueDate: true },
     }),
+    // الأصول والرواتب (وحدات جديدة)
+    db.fixedAsset.aggregate({
+      where: { status: "ACTIVE" },
+      _sum: { cost: true, accumulatedDepreciation: true },
+      _count: { _all: true },
+    }),
+    db.employee.aggregate({
+      where: { isActive: true },
+      _sum: { basicSalary: true, housingAllowance: true, transportAllowance: true, otherAllowance: true },
+      _count: { _all: true },
+    }),
+    db.payrollRun.findFirst({
+      orderBy: [{ periodYear: "desc" }, { periodMonth: "desc" }],
+      select: { periodYear: true, periodMonth: true, status: true, totalNet: true, paidAt: true },
+    }),
   ]);
+
 
 
   const sales = monthInvoices._sum.totalAmount ?? 0;
@@ -170,6 +192,23 @@ export default async function DashboardPage() {
     }
   }
   const obligationsChart = obBuckets.map((b) => ({ month: b.label, upcoming: b.upcoming, overdue: b.overdue }));
+
+  // ===== الأصول والرواتب =====
+  const assetCost = assetAgg._sum.cost ?? 0;
+  const assetAccum = assetAgg._sum.accumulatedDepreciation ?? 0;
+  const assetBookValue = round2(assetCost - assetAccum);
+  const employeeCount = employeeAgg._count._all;
+  const monthlyPayroll = round2(
+    (employeeAgg._sum.basicSalary ?? 0) +
+      (employeeAgg._sum.housingAllowance ?? 0) +
+      (employeeAgg._sum.transportAllowance ?? 0) +
+      (employeeAgg._sum.otherAllowance ?? 0)
+  );
+  const payrollLabel = latestPayroll
+    ? `${latestPayroll.periodMonth}/${latestPayroll.periodYear} — ${
+        latestPayroll.status === "POSTED" ? (latestPayroll.paidAt ? "مُصروف" : "مرحّلة") : "مسودة"
+      }`
+    : "لا يوجد شغل بعد";
 
   const hour = now.getHours();
   const greeting = hour < 12 ? "صباح الخير" : hour < 17 ? "مساء الخير" : "مساء الخير";
@@ -224,6 +263,30 @@ export default async function DashboardPage() {
       </section>
 
       <ControlTower />
+
+      {/* ===== الأصول والموظفون والرواتب ===== */}
+      <section className="grid gap-3 sm:grid-cols-3">
+        <StatCard
+          label="الأصول (قيمة دفترية)"
+          value={formatMoney(assetBookValue)}
+          hint={`${assetAgg._count._all} أصل نشط — تكلفة ${formatMoney(assetCost)}`}
+          icon={Boxes}
+          tone="info"
+        />
+        <StatCard
+          label="الموظفون النشطون"
+          value={`${employeeCount}`}
+          hint={`رواتب شهرية ${formatMoney(monthlyPayroll)}`}
+          icon={UserRound}
+        />
+        <StatCard
+          label="آخر شغل رواتب"
+          value={latestPayroll ? formatMoney(latestPayroll.totalNet) : "—"}
+          hint={payrollLabel}
+          icon={Banknote}
+          tone={latestPayroll ? "success" : "default"}
+        />
+      </section>
 
       {/* ===== مؤشرات شغل المكتب ===== */}
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

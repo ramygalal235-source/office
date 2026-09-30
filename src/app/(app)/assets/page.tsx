@@ -18,11 +18,12 @@ export const metadata = { title: "الأصول الثابتة | دفاتر ال�
 
 export default async function AssetsPage() {
   const session = await getSession();
-  const [assets, accounts] = await Promise.all([
+  const [assets, accounts, safes] = await Promise.all([
     db.fixedAsset.findMany({
       include: { account: { select: { code: true, name: true } } },
       orderBy: { code: "asc" },
     }),
+    db.safe.findMany({ where: { isActive: true }, select: { id: true, name: true, type: true }, orderBy: { name: "asc" } }),
     db.account.findMany({
       where: { code: { startsWith: "12" }, isGroup: false, isActive: true },
       select: { id: true, code: true, name: true },
@@ -84,7 +85,12 @@ export default async function AssetsPage() {
               </TableHeader>
               <TableBody>
                 {assets.map((a) => (
-                  <AssetRow key={a.id} asset={a} canAct={session?.role === "admin"} />
+                  <AssetRow
+                    key={a.id}
+                    asset={a}
+                    canAct={session?.role === "admin"}
+                    safes={safes.map((x) => ({ id: x.id, label: `${x.name} (${x.type === "BANK" ? "بنك" : "خزينة"})` }))}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -98,6 +104,7 @@ export default async function AssetsPage() {
 function AssetRow({
   asset,
   canAct,
+  safes,
 }: {
   asset: {
     id: string;
@@ -109,9 +116,11 @@ function AssetRow({
     method: string;
     accumulatedDepreciation: number;
     status: string;
+    acquisitionPosted: boolean;
     account: { code: string; name: string } | null;
   };
   canAct: boolean;
+  safes: { id: string; label: string }[];
 }) {
   const depreciable = Math.max(0, asset.cost - asset.salvageValue);
   const book = round2(asset.cost - asset.accumulatedDepreciation);
@@ -132,7 +141,12 @@ function AssetRow({
           {asset.method === "DECLINING" ? "تنقص" : "قسط ثابت"} — {asset.lifeYears} سنة
         </span>
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">{asset.account ? `${asset.account.code}` : "—"}</TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {asset.account ? `${asset.account.code}` : "—"}
+        {asset.acquisitionPosted && (
+          <Badge variant="success" className="mr-1.5 scale-90">مرحّل</Badge>
+        )}
+      </TableCell>
       <TableCell className="tabular text-start font-semibold">{formatMoney(asset.cost)}</TableCell>
       <TableCell className="tabular text-start text-sm">{formatMoney(asset.accumulatedDepreciation)}</TableCell>
       <TableCell className="tabular text-start text-sm font-semibold">{formatMoney(book)}</TableCell>
@@ -149,7 +163,15 @@ function AssetRow({
         </Badge>
       </TableCell>
       <TableCell>
-        <AssetRowActions id={asset.id} status={asset.status} fullyDepreciated={fullyDepreciated} canAct={canAct} />
+        <AssetRowActions
+          id={asset.id}
+          status={asset.status}
+          fullyDepreciated={fullyDepreciated}
+          canAct={canAct}
+          acquisitionPosted={asset.acquisitionPosted}
+          hasAccount={!!asset.account}
+          safes={safes}
+        />
       </TableCell>
     </TableRow>
   );

@@ -9,13 +9,14 @@ import { AutoPrint } from "@/components/auto-print";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "طباعة تقرير | دفاتر المحاسب" };
 
-type Kind = "trial" | "statements" | "receivables" | "vat";
-const KINDS: Kind[] = ["trial", "statements", "receivables", "vat"];
+type Kind = "trial" | "statements" | "receivables" | "vat" | "assets";
+const KINDS: Kind[] = ["trial", "statements", "receivables", "vat", "assets"];
 const TITLES: Record<Kind, string> = {
   trial: "ميزان المراجعة",
   statements: "القوائم المالية",
   receivables: "ذمم العملاء والموردين",
   vat: "ملخص ضريبة القيمة المضافة",
+  assets: "سجل الأصول الثابتة والإهلاك",
 };
 
 function startOfYear() {
@@ -52,6 +53,7 @@ export default async function PrintReportPage({ params }: { params: Promise<{ ki
         {k === "statements" && <StatementsSection from={from} to={now} />}
         {k === "receivables" && <ReceivablesSection />}
         {k === "vat" && <VatSection from={from} to={now} />}
+        {k === "assets" && <AssetsSection>}
 
         <p className="print-doc-foot">
           صدر هذا التقرير آليًا من {brand.name} بتاريخ {formatDate(now)}
@@ -247,5 +249,59 @@ async function VatSection({ from, to }: { from: Date; to: Date }) {
         الفترة التي تُدخل كقيود يدوية في دفتر اليومية.
       </p>
     </section>
+  );
+}
+
+async function AssetsSection() {
+  const assets = await db.fixedAsset.findMany({
+    include: { account: { select: { code: true, name: true } }, depreciations: { select: { periodYear: true, periodMonth: true, amount: true } } },
+    orderBy: { code: "asc" },
+  });
+  if (assets.length === 0) {
+    return <p style={{ fontSize: 12, color: "#555" }}>لا توجد أصول مسجلة.</p>;
+  }
+  const sum = (f: (a: (typeof assets)[number]) => number) => assets.reduce((x, a) => x + f(a), 0);
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>الرمز</th>
+          <th>الأصل</th>
+          <th>الحساب</th>
+          <th>التكلفة</th>
+          <th>المجمع</th>
+          <th>القيمة الدفترية</th>
+          <th>إهلاك السنة</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        {assets.map((a) => {
+          const yearDep = a.depreciations
+            .filter((d) => d.periodYear === new Date().getFullYear())
+            .reduce((x, d) => x + d.amount, 0);
+          return (
+            <tr key={a.id}>
+              <td>{a.code}</td>
+              <td>{a.name}</td>
+              <td>{a.account ? a.account.code : "—"}</td>
+              <td className="num">{formatMoney(a.cost)}</td>
+              <td className="num">{formatMoney(a.accumulatedDepreciation)}</td>
+              <td className="num">{formatMoney(round2(a.cost - a.accumulatedDepreciation))}</td>
+              <td className="num">{formatMoney(round2(yearDep))}</td>
+              <td>{a.status === "ACTIVE" ? "نشط" : "مُصرَّف"}</td>
+            </tr>
+          );
+        })}
+        <tr style={{ fontWeight: 700 }}>
+          <td colSpan={3}>الإجمالي</td>
+          <td className="num">{formatMoney(sum((a) => a.cost))}</td>
+          <td className="num">{formatMoney(sum((a) => a.accumulatedDepreciation))}</td>
+          <td className="num">{formatMoney(sum((a) => a.cost - a.accumulatedDepreciation))}</td>
+          <td className="num">{formatMoney(sum((a) => a.depreciations.filter((d) => d.periodYear === new Date().getFullYear()).reduce((x, d) => x + d.amount, 0)))}</td>
+          <td>{`${assets.filter((a) => a.status === "ACTIVE").length} نشط`}</td>
+        </tr>
+      </tbody>
+    </table>
   );
 }

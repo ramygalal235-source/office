@@ -40,6 +40,20 @@ const MIGRATIONS: Migration[] = [
     columns: [{ table: "PayrollRun", column: "paidAt", sql: "paidAt DATETIME" }],
     indexes: [],
   },
+  {
+    // الإصدار 4: تتبع ترحيل قيد الاستحواذ للأصول
+    version: 4,
+    note: "acquisitionPosted على FixedAsset",
+    columns: [{ table: "FixedAsset", column: "acquisitionPosted", sql: "acquisitionPosted BOOLEAN DEFAULT 0" }],
+    indexes: [],
+  },
+  {
+    // الإصدار 5: قيمة البيع عند صرف الأصل (للقيد المحاسبي)
+    version: 5,
+    note: "disposalProceeds على FixedAsset",
+    columns: [{ table: "FixedAsset", column: "disposalProceeds", sql: "disposalProceeds FLOAT" }],
+    indexes: [],
+  },
 ];
 
 const LATEST_VERSION = MIGRATIONS.reduce((m, x) => Math.max(m, x.version), 1);

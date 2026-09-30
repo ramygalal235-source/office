@@ -22,7 +22,7 @@ export default async function ReportsPage() {
   const yearStart = startOfYear();
   const now = new Date();
 
-  const [trial, statement, customers, suppliers, vat] = await Promise.all([
+  const [trial, statement, customers, suppliers, vat, assets] = await Promise.all([
     getTrialBalance({ from: yearStart, to: now }),
     getFinancialStatement({ from: yearStart, to: now }),
     getPartyBalances("CUSTOMER"),
@@ -31,6 +31,10 @@ export default async function ReportsPage() {
       where: { date: { gte: yearStart, lte: now }, status: { notIn: ["DRAFT", "CANCELLED"] } },
       _sum: { subtotal: true, discount: true, taxAmount: true, totalAmount: true },
       _count: { _all: true },
+    }),
+    db.fixedAsset.findMany({
+      include: { account: { select: { code: true } }, depreciations: { select: { periodYear: true, amount: true } } },
+      orderBy: { code: "asc" },
     }),
   ]);
 
@@ -73,6 +77,7 @@ export default async function ReportsPage() {
           <TabsTrigger value="statements">القوائم المالية</TabsTrigger>
           <TabsTrigger value="receivables">ذمم العملاء والموردين</TabsTrigger>
           <TabsTrigger value="vat">ملخص القيمة المضافة</TabsTrigger>
+          <TabsTrigger value="assets">الأصول الثابتة</TabsTrigger>
         </TabsList>
 
         {/* ===== ميزان المراجعة ===== */}
@@ -212,6 +217,69 @@ export default async function ReportsPage() {
                 الأرقام محسوبة من الفواتير والقيود المرحّلة فقط. الإقرار الضريبي الفعلي
                 يعتمد على تسويات نهاية الفترة التي تُدخل كقيود يدوية في دفتر اليومية.
               </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="assets">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">
+                سجل الأصول الثابتة والإهلاك — {now.getFullYear()}
+              </CardTitle>
+              <PrintReportLink kind="assets" />
+            </CardHeader>
+            <CardContent className="p-0">
+              {assets.length === 0 ? (
+                <p className="p-6 text-center text-sm text-muted-foreground">لا توجد أصول مسجلة.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>الرمز</TableHead>
+                      <TableHead>الأصل</TableHead>
+                      <TableHead>الحساب</TableHead>
+                      <TableHead className="text-start">التكلفة</TableHead>
+                      <TableHead className="text-start">مجمع الإهلاك</TableHead>
+                      <TableHead className="text-start">القيمة الدفترية</TableHead>
+                      <TableHead className="text-start">إهلاك السنة</TableHead>
+                      <TableHead>الحالة</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {assets.map((a) => {
+                      const yearDep = a.depreciations
+                        .filter((d) => d.periodYear === now.getFullYear())
+                        .reduce((x, d) => x + d.amount, 0);
+                      return (
+                        <TableRow key={a.id}>
+                          <TableCell className="tabular font-medium">{a.code}</TableCell>
+                          <TableCell className="text-sm">{a.name}</TableCell>
+                          <TableCell className="tabular text-xs text-muted-foreground">{a.account?.code ?? "—"}</TableCell>
+                          <TableCell className="tabular text-start">{formatMoney(a.cost)}</TableCell>
+                          <TableCell className="tabular text-start">{formatMoney(a.accumulatedDepreciation)}</TableCell>
+                          <TableCell className="tabular text-start font-semibold">{formatMoney(round2(a.cost - a.accumulatedDepreciation))}</TableCell>
+                          <TableCell className="tabular text-start">{formatMoney(round2(yearDep))}</TableCell>
+                          <TableCell>
+                            <Badge variant={a.status === "ACTIVE" ? "success" : "muted"}>
+                              {a.status === "ACTIVE" ? "نشط" : "مُصرَّف"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    <TableRow className="bg-muted/40 font-semibold">
+                      <TableCell colSpan={3}>الإجمالي</TableCell>
+                      <TableCell className="tabular text-start">{formatMoney(sumMoney(assets.map((a) => a.cost)))}</TableCell>
+                      <TableCell className="tabular text-start">{formatMoney(sumMoney(assets.map((a) => a.accumulatedDepreciation)))}</TableCell>
+                      <TableCell className="tabular text-start">{formatMoney(sumMoney(assets.map((a) => round2(a.cost - a.accumulatedDepreciation))))}</TableCell>
+                      <TableCell className="tabular text-start">
+                        {formatMoney(sumMoney(assets.map((a) => a.depreciations.filter((d) => d.periodYear === now.getFullYear()).reduce((x, d) => x + d.amount, 0))))}
+                      </TableCell>
+                      <TableCell>{`${assets.filter((a) => a.status === "ACTIVE").length} نشط`}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

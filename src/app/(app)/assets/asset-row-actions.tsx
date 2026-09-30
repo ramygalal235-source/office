@@ -3,7 +3,7 @@
 // ===== أفعال أصل ثابت: إهلاك فترة / سجل الإهلاك / صرف =====
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { History, Loader2, MoreHorizontal, Trash2, TrendingDown } from "lucide-react";
+import { History, Loader2, MoreHorizontal, Send, Trash2, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, jsonBody } from "@/lib/client-api";
 import { formatMoney } from "@/lib/money";
@@ -15,6 +15,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
 type Entry = {
@@ -30,17 +31,28 @@ export function AssetRowActions({
   status,
   fullyDepreciated,
   canAct,
+  acquisitionPosted,
+  hasAccount,
+  safes,
 }: {
   id: string;
   status: string;
   fullyDepreciated: boolean;
   canAct: boolean;
+  acquisitionPosted: boolean;
+  hasAccount: boolean;
+  safes: { id: string; label: string }[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [entries, setEntries] = useState<Entry[] | null>(null);
+  const [postOpen, setPostOpen] = useState(false);
+  const [safeId, setSafeId] = useState("");
+  const [disposeOpen, setDisposeOpen] = useState(false);
+  const [proceeds, setProceeds] = useState("");
+  const [disposeSafeId, setDisposeSafeId] = useState("");
   const now = new Date();
   const [year, setYear] = useState(String(now.getFullYear()));
   const [month, setMonth] = useState(String(now.getMonth() + 1));
@@ -67,15 +79,39 @@ export function AssetRowActions({
     else toast.error(res.error ?? "تعذّر تحميل السجل");
   }
 
-  async function dispose() {
-    if (busy) return;
-    if (!confirm("صرف هذا الأصل نهائيًا؟ سيتوقف إهلاكه.")) return;
+  async function postAcquisition() {
+    if (busy || !safeId) return;
+    if (!confirm(`ترحيل قيد الاستحواذ؟ مدين حساب الأصل — دائن ${safes.find((x) => x.id === safeId)?.label ?? ""}.`)) return;
     setBusy(true);
-    const res = await apiFetch<{ message: string }>(`/api/assets/${id}/dispose`, {
+    const res = await apiFetch<{ message?: string; journalNumber?: string }>(`/api/assets/${id}/post`, {
       method: "POST",
+      ...jsonBody({ safeId }),
       silent: true,
     });
     setBusy(false);
+    setPostOpen(false);
+    if (res.ok && res.data?.message) toast.success(res.data.message);
+    else toast.error(res.error ?? "تعذّر الترحيل");
+    router.refresh();
+  }
+
+  async function dispose() {
+    if (busy) return;
+    const hasProceeds = Number(proceeds) > 0;
+    if (hasProceeds && !disposeSafeId) {
+      toast.error("قيمة بيع مذكورة — حدد الخزينة/البنك");
+      return;
+    }
+    setBusy(true);
+    const res = await apiFetch<{ message: string }>(`/api/assets/${id}/dispose`, {
+      method: "POST",
+      ...jsonBody({ proceeds: hasProceeds ? Number(proceeds) : 0, safeId: hasProceeds ? disposeSafeId : undefined }),
+      silent: true,
+    });
+    setBusy(false);
+    setDisposeOpen(false);
+    setProceeds("");
+    setDisposeSafeId("");
     if (res.ok && res.data?.message) toast.success(res.data.message);
     else toast.error(res.error ?? "تعذّر الصرف");
     router.refresh();
@@ -94,6 +130,15 @@ export function AssetRowActions({
             <History />
             سجل الإهلاك
           </DropdownMenuItem>
+          {canAct && !acquisitionPosted && (
+            <DropdownMenuItem
+              disabled={!hasAccount}
+              onClick={() => (hasAccount ? setPostOpen(true) : toast.error("اربط الأصل بحساب من دليل الحسابات أولًا"))}
+            >
+              <Send />
+              ترحيل قيد الاستحواذ
+            </DropdownMenuItem>
+          )}
           {canAct && status === "ACTIVE" && !fullyDepreciated && (
             <DropdownMenuItem onClick={() => setPeriodOpen(true)}>
               <TrendingDown />
@@ -103,7 +148,7 @@ export function AssetRowActions({
           {canAct && status === "ACTIVE" && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem destructive onClick={dispose}>
+              <DropdownMenuItem destructive onClick={() => setDisposeOpen(true)}>
                 <Trash2 />
                 صرف / إتلاف
               </DropdownMenuItem>

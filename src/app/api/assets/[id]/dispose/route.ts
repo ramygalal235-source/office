@@ -9,8 +9,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const admin = requireAdmin(req);
   if (!admin) return fail("صلاحية المدير مطلوبة", 403);
   const { id } = await params;
+  const body = (await req.json().catch(() => null)) as { proceeds?: number; safeId?: string } | null;
   try {
-    const result = await disposeAsset(id, new Date(), admin);
+    const result = await disposeAsset(
+      id,
+      {
+        date: new Date(),
+        proceeds: body?.proceeds ? Number(body.proceeds) : 0,
+        safeId: body?.safeId ?? undefined,
+      },
+      admin
+    );
     await auditLog("DISPOSE", "FixedAsset", id, result.message, admin);
     return ok(result, { ok: result.ok });
   } catch (e) {

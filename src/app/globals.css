@@ -375,6 +375,86 @@
   margin-top: 3px;
 }
 
+/* ===== قسائم الرواتب (طباعة) ===== */
+.print-payslips {
+  font-size: 12px;
+}
+.payslip-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  page-break-inside: avoid;
+}
+.payslip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.payslip-emp {
+  font-size: 14px;
+  display: block;
+}
+.payslip-meta {
+  font-size: 11px;
+  color: #666;
+}
+.payslip-net {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+.payslip-net span {
+  font-size: 10px;
+  color: #666;
+}
+.payslip-net b {
+  font-size: 15px;
+  color: #0d7a5f;
+}
+.payslip-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.payslip-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.payslip-table .num {
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.payslip-table tr.subtotal td {
+  font-weight: 600;
+  border-top: 1px solid #ccc;
+}
+.payslip-table tr.net td {
+  font-weight: 800;
+  font-size: 13px;
+  border-top: 2px solid #111;
+}
+.payslip-foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #444;
+}
+.payslip-foot i {
+  display: block;
+  margin-top: 18px;
+  border-top: 1px dotted #999;
+  width: 120px;
+  text-align: center;
+  font-style: normal;
+}
+
+
 @media print {
   @page {
     size: A4;
