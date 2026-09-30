@@ -20,7 +20,8 @@
     "check:schema": "python3 scripts/check-schema.py prisma/schema.prisma",
     "test:stress": "node --experimental-strip-types --import ./scripts/stress/register.mjs scripts/stress/run-all.mjs",
     "dist:web": "node scripts/package-standalone.mjs",
-    "dist": "npm run dist:web && electron-builder --win"
+    "dist": "npm run dist:web && electron-builder --win",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",

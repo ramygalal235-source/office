@@ -115,6 +115,8 @@ export function SettingsBoard({
   chain,
   counts,
   lastBackupAt,
+  restore,
+  defaultCreds,
   initialUsers,
 }: {
   brand: OfficeBrand;
@@ -124,6 +126,8 @@ export function SettingsBoard({
   chain: ChainState;
   counts: Counts;
   lastBackupAt: string | null;
+  restore: { pending: boolean; quarantined: string[] };
+  defaultCreds: boolean;
   initialUsers: UserInfo[];
 }) {
   const router = useRouter();
@@ -318,6 +322,16 @@ export function SettingsBoard({
         <h1 className="text-2xl font-bold">الإعدادات</h1>
         <p className="mt-1 text-sm text-muted-foreground">إدارة المكتب والمستخدمين والأمان والفوترة الإلكترونية والنسخ الاحتياطي</p>
       </div>
+
+      {defaultCreds && (
+        <div className="flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+          <p>
+            <b>تنبيه أمني:</b> حساب المدير ما زال بكلمة المرور الافتراضية — غيّرها من تبويب
+            «الأمان» قبل الاستخدام الفعلي.
+          </p>
+        </div>
+      )}
 
       <Tabs defaultValue="office">
         <TabsList className="flex h-auto flex-wrap justify-start gap-1">
@@ -607,6 +621,32 @@ export function SettingsBoard({
 
         {/* ================= النسخ الاحتياطي ================= */}
         <TabsContent value="backup">
+          {(restore.pending || restore.quarantined.length > 0) && (
+            <div
+              className={`flex items-start gap-3 rounded-lg border p-3 text-sm ${
+                restore.pending
+                  ? "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
+                  : "border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
+              }`}
+            >
+              <FileWarning className="mt-0.5 size-4 shrink-0" />
+              <div className="flex flex-col gap-1">
+                {restore.pending && (
+                  <p>
+                    هناك <b>استعادة معلقة</b> ستُطبَّق عند إغلاق التطبيق وتشغيله من جديد — ستنعكس
+                    البيانات القديمة عليها.
+                  </p>
+                )}
+                {restore.quarantined.length > 0 && (
+                  <p>
+                    ملفات استعادة فاشلة <b>معزولة</b> (لم تُطبَّق لأنها تالفة):{" "}
+                    <span dir="ltr">{restore.quarantined.join("، ")}</span> — تحذفها من مجلد
+                    البيانات/ db متى شئت.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
           <Card>
             <CardHeader>
               <CardTitle>النسخ الاحتياطي والاستعادة</CardTitle>

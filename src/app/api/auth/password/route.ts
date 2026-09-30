@@ -37,6 +37,11 @@ export async function POST(req: NextRequest) {
     });
     await auditLog("PASSWORD_CHANGE", "User", user.uid, "تغيير كلمة المرور", user.username);
 
+    // إن كان المدير غيّر كلمة المرور الافتراضية، يسقط التنبيه الأمني
+    if (record.role === "admin") {
+      await db.setting.deleteMany({ where: { key: "security.defaultCreds" } }).catch(() => {});
+    }
+
     return ok({ changed: true });
   } catch (e) {
     return handleDbError(e);

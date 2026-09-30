@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -16,7 +18,7 @@ export default async function SettingsPage() {
   if (!session) redirect("/login");
   if (session.role !== "admin") redirect("/");
 
-  const [brand, ocr, etaRaw, stats, chain, counts, lastBackup, users] = await Promise.all([
+  const [brand, ocr, etaRaw, stats, chain, counts, lastBackup, users, restoreState, defaultCreds] = await Promise.all([
     getOfficeBrand(),
     (async () => {
       const s = await getOcrSettings();
@@ -37,6 +39,19 @@ export default async function SettingsPage() {
       return { events, jobs, docs, invoices, companies, users };
     })(),
     db.setting.findUnique({ where: { key: "backup.lastAt" } }),
+    (async () => {
+      try {
+        const dir = path.join(process.env.DAFATIR_DATA_DIR ?? process.cwd(), "db");
+        const files = fs.readdirSync(dir).filter((f) => f.startsWith("pending-restore.zip"));
+        return {
+          pending: files.includes("pending-restore.zip"),
+          quarantined: files.filter((f) => f !== "pending-restore.zip").slice(-3).reverse(),
+        };
+      } catch {
+        return { pending: false, quarantined: [] as string[] };
+      }
+    })(),
+    db.setting.findUnique({ where: { key: "security.defaultCreds" } }),
     db.user.findMany({
       select: {
         id: true,
@@ -67,6 +82,8 @@ export default async function SettingsPage() {
         chain={{ ok: chain.ok, checked: chain.checked, breaks: chain.breaks.length }}
         counts={counts}
         lastBackupAt={lastBackup?.value ?? null}
+        restore={restoreState}
+        defaultCreds={defaultCreds?.value === "true"}
         initialUsers={users.map((u) => ({ ...u, lastLogin: u.lastLogin?.toISOString() ?? null, createdAt: u.createdAt.toISOString() }))}
       />
     </div>

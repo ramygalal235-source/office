@@ -11,7 +11,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || "dafater-almohaseb-local-se
 const COOKIE_NAME = "dafater_session";
 
 // مسارات عامة لا تتطلب جلسة
-const PUBLIC_PATHS = ["/api/auth"];
+const PUBLIC_PATHS = ["/api/auth", "/api/health"];
 
 // مسارات كتابية محجوزة للمدير (مدمرة أو إدارية)
 const ADMIN_WRITE_PREFIXES = [

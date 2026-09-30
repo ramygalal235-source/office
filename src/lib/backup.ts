@@ -81,21 +81,62 @@ export function validateRestoreZip(buf: Buffer): { ok: boolean; error?: string; 
 
 /**
  * يُستدعى عند إقلاع الخادم: إن وُجدت استعادة معلقة، تُطبَّق ثم تُحذف.
- * أخطاء التطبيق تُبقي الملف معلقًا ليظهر في شاشة الحالة (محاولة أخرى لاحقًا).
+ *
+ * حماية الإنتاج:
+ *  - نعيد التحقق من بنية الملف لحظة التطبيق (ليس عند الاستلام فقط).
+ *  - نحفظ آخر قاعدة سليمة (rotating ×2) قبل أي استبدال.
+ *  - نظّف ملفات WAL/SHM القديمة — وجودها مع ملف قاعدة جديد يفسد الاسترداد.
+ *  - فحص سلامة (integrity_check) بعد الاستبدال: عند الفشل نرجع لآخر سليم
+ *    ونعزل الملف المريب بدل إبقاء النظام على قاعدة فاسدة.
+ * أخطاء التطبيق تُبقي الملف معلقًا ليظهر في شاشة الحالة (محاولة أخرى لاحقًا)
+ * ما لم يثبت فساده — عندها يُعزل ويُسجَّل الفشل.
  */
 export async function applyPendingRestore(): Promise<{ applied: boolean; reason?: string }> {
   const pending = PENDING_RESTORE();
   if (!fs.existsSync(pending)) return { applied: false };
 
+  const dbPath = resolveDbPath();
+  const lastGood = `${dbPath}.last-good`;
+  const lastGoodPrev = `${dbPath}.last-good.1`;
+
+  const quarantine = (suffix: string) => {
+    const q = `${pending}.${suffix}-${Date.now()}`;
+    try {
+      fs.renameSync(pending, q);
+      return q;
+    } catch {
+      return pending;
+    }
+  };
+
   try {
+    // 1) التحقق من البنية لحظة التطبيق
+    const validation = validateRestoreZip(fs.readFileSync(pending));
+    if (!validation.ok) {
+      const q = quarantine("invalid");
+      return { applied: false, reason: `ملف الاستعادة المعلقة تالف (${validation.error}) — عول في: ${q}` };
+    }
+
     const zip = new AdmZip(fs.readFileSync(pending));
     const dbEntry = zip.getEntry("app.db");
     if (!dbEntry) throw new Error("pending-restore بلا app.db");
 
-    const dbPath = resolveDbPath();
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-    // استبدال قاعدة البيانات
+    // 2) آخر نسخة سليمة (تدوير ×2)
+    if (fs.existsSync(dbPath)) {
+      if (fs.existsSync(lastGood)) fs.renameSync(lastGood, lastGoodPrev);
+      fs.copyFileSync(dbPath, lastGood);
+    } else {
+      for (const f of [lastGood, lastGoodPrev]) if (fs.existsSync(f)) fs.rmSync(f, { force: true });
+    }
+
+    // 3) ملفات WAL/SHM قديمة — تُحذف قبل الاستبدال (الخادم لم يفتح القاعدة بعد)
+    for (const suffix of ["-wal", "-shm"]) {
+      try { fs.rmSync(dbPath + suffix, { force: true }); } catch {}
+    }
+
+    // 4) الاستبدال
     const dbTmp = `${dbPath}.restore-tmp`;
     fs.writeFileSync(dbTmp, dbEntry.getData());
     fs.renameSync(dbTmp, dbPath);
@@ -108,6 +149,36 @@ export async function applyPendingRestore(): Promise<{ applied: boolean; reason?
       const target = path.join(uploadsBase, entry.entryName.slice("uploads/".length));
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, entry.getData());
+    }
+
+    // 5) فحص سلامة القاعدة الجديدة — أول اتصال بعد الاستبدال يكون عليها
+    let integrity: string[];
+    try {
+      integrity = (await db.$queryRaw<{ integrity_check: string }[]>`PRAGMA integrity_check`).map(
+        (r) => r.integrity_check
+      );
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      throw new Error(`تعذّر فتح القاعدة المستعادة: ${reason}`);
+    }
+
+    if (!integrity.length || integrity[0] !== "ok") {
+      const detail = integrity.slice(0, 3).join("؛ ");
+      // نرجع لآخر سليم إن وُجد، ونعزل الملف المريب
+      if (fs.existsSync(lastGood)) {
+        // نقفل الاتصال أولًا — على ويندوز لا يُعاد تسمية ملف مقفول
+        await db.$disconnect().catch(() => {});
+        for (const suffix of ["-wal", "-shm"]) {
+          try { fs.rmSync(dbPath + suffix, { force: true }); } catch {}
+        }
+        fs.renameSync(dbPath, `${dbPath}.bad-${Date.now()}`);
+        fs.renameSync(lastGood, dbPath);
+      }
+      const q = quarantine("corrupt");
+      return {
+        applied: false,
+        reason: `القاعدة المستعادة فاشلة فحص السلامة (${detail}) — عول الملف المريب في: ${q}`,
+      };
     }
 
     fs.rmSync(pending, { force: true });

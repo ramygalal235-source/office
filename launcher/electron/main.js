@@ -18,6 +18,7 @@ const { spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const net = require("node:net");
+const http = require("node:http");
 const path = require("node:path");
 
 const APP_FOLDER = "DafatirOffice"; // مجلد بيانات المستخدم (ASCII لأمان المسار)
@@ -51,15 +52,16 @@ async function pickPort() {
 }
 
 function portReady(port) {
+  // جاهزية فعلية: الخادم يجيب على /api/health (فتح المنفذ وحده لا يكفي —
+  // Next قد يفتح المنفذ قبل أن يصبح قادرًا على الخدمة)
   return new Promise((resolve) => {
-    const sock = net.createConnection({ host: "127.0.0.1", port, timeout: 500 });
-    sock.once("connect", () => {
-      sock.destroy();
-      resolve(true);
+    const req = http.get({ host: "127.0.0.1", port, path: "/api/health", timeout: 1500 }, (res) => {
+      res.resume();
+      res.on("end", () => resolve(res.statusCode === 200));
     });
-    sock.once("error", () => resolve(false));
-    sock.once("timeout", () => {
-      sock.destroy();
+    req.once("error", () => resolve(false));
+    req.once("timeout", () => {
+      req.destroy();
       resolve(false);
     });
   });

@@ -59,6 +59,11 @@ async function seedUsers() {
   console.log(`  • تم إنشاء مدير النظام: ${username} / ${password}`);
   if (password === "admin123") {
     console.log("    ⚠  غيّر كلمة المرور من داخل التطبيق بعد أول تسجيل دخول");
+    await db.setting.upsert({
+      where: { key: "security.defaultCreds" },
+      update: { value: "true" },
+      create: { key: "security.defaultCreds", value: "true", group: "security", label: "بيانات الدخول الافتراضية سارية" },
+    });
   }
   return { created: true, username };
 }
