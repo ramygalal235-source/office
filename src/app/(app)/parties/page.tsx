@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { getSession } from "@/lib/auth";
 import { getPartyBalances } from "@/lib/accounting/ledger";
 import { PageHeader } from "@/components/page-header";
@@ -10,10 +11,11 @@ export default async function PartiesPage() {
   const user = await getSession();
   if (!user) return null;
 
+  const companyId = await requireCompanyId();
   const [parties, customerBalances, supplierBalances] = await Promise.all([
-    db.party.findMany({ orderBy: { name: "asc" }, take: 500 }),
-    getPartyBalances("CUSTOMER"),
-    getPartyBalances("SUPPLIER"),
+    db.party.findMany({ where: { companyId }, orderBy: { name: "asc" }, take: 500 }),
+    getPartyBalances("CUSTOMER", companyId),
+    getPartyBalances("SUPPLIER", companyId),
   ]);
 
   const balanceBy = new Map<string, number>([

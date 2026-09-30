@@ -1,6 +1,7 @@
 import { Target } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -24,8 +25,10 @@ const STATUS: Record<string, { label: string; variant: "muted" | "info" | "succe
 
 export default async function BudgetsPage() {
   const session = await getSession();
+  const companyId = await requireCompanyId();
   const [budgets, accounts] = await Promise.all([
     db.budget.findMany({
+      where: { companyId },
       include: { lines: { include: { account: { select: { code: true, name: true } } }, orderBy: [
         { periodMonth: "asc" },
       ] } },

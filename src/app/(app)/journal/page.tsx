@@ -1,6 +1,7 @@
 import { ScrollText } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { formatDate, formatMoney, round2 } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
@@ -24,9 +25,10 @@ const SOURCE_LABELS: Record<string, string> = {
 
 export default async function JournalPage() {
   const session = await getSession();
+  const companyId = await requireCompanyId();
   const [entries, sums] = await Promise.all([
     db.journalEntry.findMany({
-      where: { status: { not: "REVERSED" } },
+      where: { companyId, status: { not: "REVERSED" } },
       include: {
         lines: {
           orderBy: { sortOrder: "asc" },
@@ -37,7 +39,7 @@ export default async function JournalPage() {
       take: 60,
     }),
     db.journalEntry.aggregate({
-      where: { status: "POSTED" },
+      where: { companyId, status: "POSTED" },
       _sum: { totalDebit: true, totalCredit: true },
       _count: { _all: true },
     }),

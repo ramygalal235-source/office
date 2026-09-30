@@ -1,6 +1,7 @@
 import { Users } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -18,7 +19,8 @@ export const metadata = { title: "الموظفون | دفاتر المحاسب" 
 
 export default async function EmployeesPage() {
   const session = await getSession();
-  const employees = await db.employee.findMany({ orderBy: { code: "asc" } });
+  const companyId = await requireCompanyId();
+  const employees = await db.employee.findMany({ where: { companyId }, orderBy: { code: "asc" } });
 
   const active = employees.filter((e) => e.isActive);
   const monthlyPayroll = sumMoney(

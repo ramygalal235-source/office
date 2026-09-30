@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, getSessionUser, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
 import { firstIssue, optNum, optText, reqText } from "@/lib/validators";
 import { round2 } from "@/lib/money";
@@ -13,7 +14,9 @@ export async function GET(req: NextRequest) {
     const category = url.searchParams.get("category") ?? "";
     const lowStock = url.searchParams.get("lowStock") === "1";
 
+    const companyId = await requireCompanyId();
     const where = {
+      companyId,
       ...(category ? { category } : {}),
       ...(q ? { OR: [{ name: { contains: q } }, { code: { contains: q } }, { category: { contains: q } }] } : {}),
     };
@@ -56,9 +59,11 @@ export async function POST(req: NextRequest) {
     const parsed = productSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return fail(firstIssue(parsed.error));
 
+    const companyId = await requireCompanyId();
     const created = await db.product.create({
       data: {
         code: await generateNumber("PRODUCT"),
+        companyId,
         name: parsed.data.name,
         category: parsed.data.category || null,
         unit: parsed.data.unit || "قطعة",

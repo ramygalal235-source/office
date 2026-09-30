@@ -1,6 +1,7 @@
 import { Plus, ShoppingCart } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { formatDate, formatMoney, round2 } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
@@ -19,8 +20,10 @@ export const metadata = { title: "فواتير الشراء | دفاتر الم�
 
 export default async function PurchasesPage() {
   const session = await getSession();
+  const companyId = await requireCompanyId();
   const [purchases, suppliers, accounts, products, sums] = await Promise.all([
     db.purchase.findMany({
+      where: { companyId },
       include: {
         supplier: { select: { id: true, name: true } },
         items: { orderBy: { sortOrder: "asc" } },
@@ -28,11 +31,11 @@ export default async function PurchasesPage() {
       orderBy: { date: "desc" },
       take: 100,
     }),
-    db.party.findMany({ where: { type: "SUPPLIER", isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.party.findMany({ where: { companyId, type: "SUPPLIER", isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     db.account.findMany({ where: { type: { in: ["EXPENSE", "ASSET"] }, isActive: true, isGroup: false }, select: { id: true, code: true, name: true }, orderBy: { code: "asc" } }),
-    db.product.findMany({ where: { isActive: true }, select: { id: true, code: true, name: true, salePrice: true, costPrice: true, unit: true }, orderBy: { name: "asc" } }),
+    db.product.findMany({ where: { companyId, isActive: true }, select: { id: true, code: true, name: true, salePrice: true, costPrice: true, unit: true }, orderBy: { name: "asc" } }),
     db.purchase.aggregate({
-      where: { status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: { companyId, status: { notIn: ["DRAFT", "CANCELLED"] } },
       _sum: { totalAmount: true, taxAmount: true, paidAmount: true },
     }),
   ]);

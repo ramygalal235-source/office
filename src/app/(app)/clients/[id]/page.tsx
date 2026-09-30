@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CalendarClock, ListTodo } from "lucide-react";
 import { db } from "@/lib/db";
-import { dueLabel, formatDate, formatMoney } from "@/lib/money";
+import { dueLabel, formatDate, formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,8 @@ import {
   taskStatusLabel,
 } from "@/components/status-badge";
 import { OBLIGATION_TYPE_LABELS, TASK_CATEGORY_LABELS } from "@/lib/domain";
+import { getFinancialStatement, getPartyBalances, getSafeBalances, getTrialBalance } from "@/lib/accounting/ledger";
+import { OpenBooksButton } from "../open-books-button";
 
 export const metadata = { title: "ملف شركة العميل | دفاتر المحاسب" };
 
@@ -56,6 +58,18 @@ export default async function ClientDetailPage({ params }: { params: Params }) {
   if (!company) notFound();
 
   const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const [safes, customers, suppliers, statement, trial] = await Promise.all([
+    getSafeBalances(company.id),
+    getPartyBalances("CUSTOMER", company.id),
+    getPartyBalances("SUPPLIER", company.id),
+    getFinancialStatement({ from: yearStart, to: now }, company.id),
+    getTrialBalance({ from: yearStart, to: now }, company.id),
+  ]);
+  const cashBalance = sumMoney(safes.map((x) => x.balance));
+  const receivable = round2(sumMoney(customers.map((c) => Math.max(0, c.balance))));
+  const payable = round2(sumMoney(suppliers.map((x) => Math.max(0, x.balance))));
+  const movingAccounts = trial.rows.filter((r) => !r.isGroup && (r.debit !== 0 || r.credit !== 0)).slice(0, 12);
   const openObligations = company.obligations.filter((o) =>
     ["PENDING", "IN_PROGRESS", "OVERDUE"].includes(o.status)
   );
@@ -79,20 +93,94 @@ export default async function ClientDetailPage({ params }: { params: Params }) {
             .join(" • ")
         }
         actions={
-          <Badge variant={company.isActive ? "success" : "muted"}>
-            {company.isActive ? "نشطة" : "موقوفة"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={company.isActive ? "success" : "muted"}>
+              {company.isActive ? "نشطة" : "موقوفة"}
+            </Badge>
+            <OpenBooksButton companyId={company.id} companyName={company.nameAr} />
+          </div>
         }
       />
 
-      <Tabs defaultValue="file">
+      <Tabs defaultValue="books">
         <TabsList>
+          <TabsTrigger value="books">الدفاتر</TabsTrigger>
           <TabsTrigger value="file">الملف الضريبي</TabsTrigger>
           <TabsTrigger value="obligations">
             الالتزامات المفتوحة ({openObligations.length})
           </TabsTrigger>
           <TabsTrigger value="tasks">المهام المفتوحة ({openTasks.length})</TabsTrigger>
         </TabsList>
+
+        {/* ===== الدفاتر ===== */}
+        <TabsContent value="books">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader><CardTitle className="text-sm">النقدية والبنوك</CardTitle></CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold tabular">{formatMoney(cashBalance)}</div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {safes.length ? `${safes.length} خزينة/بنك` : "لم تُنشأ خزائن بعد — أضفها من شاشة الخزائن"}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-sm">ذمم العملاء</CardTitle></CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold tabular">{formatMoney(receivable)}</div>
+                <p className="mt-1 text-xs text-muted-foreground">مستحقات من عملاء الشركة</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-sm">ذمم الموردين</CardTitle></CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold tabular">{formatMoney(payable)}</div>
+                <p className="mt-1 text-xs text-muted-foreground">مستحقات للموردين</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-sm">صافي ربح السنة</CardTitle></CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold tabular ${statement.netProfit >= 0 ? "" : "text-destructive"}`}>
+                  {formatMoney(statement.netProfit)}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">إيرادات {formatMoney(statement.totalRevenue)} — مصروفات {formatMoney(round2(statement.totalRevenue - statement.netProfit))}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="mt-4">
+            <CardHeader><CardTitle className="text-sm">الحسابات ذات الحركة (سنة {now.getFullYear()})</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              {movingAccounts.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  الدفاتر فارغة حتى الآن — ابدأ بتسجيل فواتير أو قيود من النطاق النشط.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>الكود</TableHead>
+                      <TableHead>الحساب</TableHead>
+                      <TableHead className="text-left">مدين</TableHead>
+                      <TableHead className="text-left">دائن</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {movingAccounts.map((r) => (
+                      <TableRow key={r.code}>
+                        <TableCell className="tabular text-xs text-muted-foreground">{r.code}</TableCell>
+                        <TableCell className="text-sm">{r.name}</TableCell>
+                        <TableCell className="tabular text-left text-sm">{r.debit ? formatMoney(r.debit) : "—"}</TableCell>
+                        <TableCell className="tabular text-left text-sm">{r.credit ? formatMoney(r.credit) : "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* ===== الملف الضريبي ===== */}
         <TabsContent value="file">

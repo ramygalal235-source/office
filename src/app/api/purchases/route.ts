@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, getSessionUser, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
 import { firstIssue } from "@/lib/validators";
 import { lineTotal, round2, sumMoney } from "@/lib/money";
@@ -13,7 +14,9 @@ export async function GET(req: NextRequest) {
     const supplierId = url.searchParams.get("supplierId") ?? "";
     const q = (url.searchParams.get("q") ?? "").trim();
 
+    const companyId = await requireCompanyId();
     const where = {
+      companyId,
       ...(status ? { status } : {}),
       ...(supplierId ? { supplierId } : {}),
       ...(q ? { purchaseNumber: { contains: q } } : {}),
@@ -75,9 +78,11 @@ export async function POST(req: NextRequest) {
 
     const purchaseNumber = await generateNumber("PURCHASE");
 
+    const companyId = await requireCompanyId();
     const created = await db.purchase.create({
       data: {
         ...header,
+        companyId,
         supplierId: supplierId || null,
         purchaseNumber,
         subtotal,

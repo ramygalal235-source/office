@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
 import { computePayslip, getPayrollParams } from "@/lib/payroll";
 
@@ -8,14 +9,15 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const { page, limit, skip, take } = parsePagination(url);
+    const companyId = await requireCompanyId();
     const [employees, total] = await Promise.all([
       db.employee.findMany({
-        where: { isActive: url.searchParams.get("inactive") ? false : undefined },
+        where: { companyId, isActive: url.searchParams.get("inactive") ? false : undefined },
         orderBy: { code: "asc" },
         skip,
         take,
       }),
-      db.employee.count(),
+      db.employee.count({ where: { companyId } }),
     ]);
     return ok(employees, { page, limit, total, pages: Math.ceil(total / limit) });
   } catch (e) {
@@ -46,9 +48,11 @@ export async function POST(req: NextRequest) {
     if (!body?.name) return fail("اسم الموظف مطلوب", 400);
 
     const code = await generateNumber("EMPLOYEE");
+    const companyId = await requireCompanyId();
     const emp = await db.employee.create({
       data: {
         code,
+        companyId,
         name: body.name,
         jobTitle: body.jobTitle ?? null,
         department: body.department ?? null,

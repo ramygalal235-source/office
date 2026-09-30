@@ -1,12 +1,15 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { auditLog, fail, handleDbError, ok, requireAdmin } from "@/lib/accounting/api";
+import { requireCompanyId } from "@/lib/company-context";
 import { runPayroll } from "@/lib/payroll";
 
-/** كشف شغل الرواتب (الأحدث أولًا) */
+/** كشف شغل الرواتب (الأحدث أولًا) — لشركة النطاق النشطة */
 export async function GET() {
   try {
+    const companyId = await requireCompanyId();
     const runs = await db.payrollRun.findMany({
+      where: { companyId },
       include: { payslips: { include: { employee: { select: { name: true, code: true } } } } },
       orderBy: [{ periodYear: "desc" }, { periodMonth: "desc" }],
       take: 24,
@@ -26,7 +29,8 @@ export async function POST(req: NextRequest) {
   const month = Number(body?.month);
   if (!year || !month || month < 1 || month > 12) return fail("حدد سنة وشهر شغل الرواتب", 400);
   try {
-    const run = await runPayroll(year, month, admin);
+    const companyId = await requireCompanyId();
+    const run = await runPayroll(year, month, admin, companyId);
     await auditLog("CREATE", "PayrollRun", run.id, `شغل رواتب ${month}/${year}`, admin);
     return ok(run, { ok: true });
   } catch (e) {

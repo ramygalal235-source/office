@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, getSessionUser, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
 import { firstIssue } from "@/lib/validators";
 import { lineTotal, round2, sumMoney } from "@/lib/money";
@@ -13,7 +14,9 @@ export async function GET(req: NextRequest) {
     const customerId = url.searchParams.get("customerId") ?? "";
     const q = (url.searchParams.get("q") ?? "").trim();
 
+    const companyId = await requireCompanyId();
     const where = {
+      companyId,
       ...(status ? { status } : {}),
       ...(customerId ? { customerId } : {}),
       ...(q ? { invoiceNumber: { contains: q } } : {}),
@@ -78,9 +81,12 @@ export async function POST(req: NextRequest) {
 
     const invoiceNumber = await generateNumber("INVOICE");
 
+    // الفاتورة تُسجَّل على دفاتر الشركة النشطة (لا من بيانات العميل)
+    const companyId = await requireCompanyId();
     const created = await db.invoice.create({
       data: {
         ...header,
+        companyId,
         invoiceNumber,
         subtotal,
         discount,

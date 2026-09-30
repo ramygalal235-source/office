@@ -96,6 +96,7 @@ export async function depreciateAsset(
     description: `إهلاك ${asset.name} (${asset.code}) عن ${month}/${year}`,
     sourceType: "ASSET_DEPRECIATION",
     sourceId: assetId,
+    companyId: asset.companyId,
     createdBy: user,
     lines: [
       { accountCode: ASSET_ACCOUNTS.depreciationExpense, debit: amount, description: `إهلاك ${asset.name}` },
@@ -184,6 +185,7 @@ export async function postAssetAcquisition(assetId: string, safeId: string, user
     description: `استحواذ أصل ثابت: ${asset.name} (${asset.code}) من ${safe.name}`,
     sourceType: "ASSET_ACQUISITION",
     sourceId: assetId,
+    companyId: asset.companyId,
     createdBy: user,
     lines: [
       { accountCode: asset.account.code, debit: asset.cost, description: asset.name },
@@ -252,6 +254,7 @@ export async function disposeAsset(
       description: `صرف أصل: ${asset.name} (${asset.code}) — بيع بـ ${proceeds.toFixed(2)}`,
       sourceType: "ASSET_DISPOSAL",
       sourceId: assetId,
+      companyId: asset.companyId,
       createdBy: user,
       lines,
     });
@@ -287,6 +290,7 @@ export async function disposeAsset(
       description: `إتلاف أصل: ${asset.name} (${asset.code}) — خسارة ${book.toFixed(2)}`,
       sourceType: "ASSET_DISPOSAL",
       sourceId: assetId,
+      companyId: asset.companyId,
       createdBy: user,
       lines,
     });

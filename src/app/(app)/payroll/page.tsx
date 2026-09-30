@@ -1,6 +1,7 @@
 import { Banknote, Coins } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { formatMoney, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -23,14 +24,16 @@ const STATUS_LABELS: Record<string, { label: string; variant: "muted" | "info" |
 
 export default async function PayrollPage() {
   const session = await getSession();
+  const companyId = await requireCompanyId();
   const [runs, safes, employeesCount] = await Promise.all([
     db.payrollRun.findMany({
+      where: { companyId },
       include: { payslips: { include: { employee: { select: { name: true, code: true } } } } },
       orderBy: [{ periodYear: "desc" }, { periodMonth: "desc" }],
       take: 12,
     }),
-    db.safe.findMany({ where: { isActive: true }, select: { id: true, name: true, type: true }, orderBy: { name: "asc" } }),
-    db.employee.count({ where: { isActive: true } }),
+    db.safe.findMany({ where: { companyId, isActive: true }, select: { id: true, name: true, type: true }, orderBy: { name: "asc" } }),
+    db.employee.count({ where: { companyId, isActive: true } }),
   ]);
 
   const now = new Date();

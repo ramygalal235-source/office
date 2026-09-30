@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
 import { bookValue, monthlyDepreciationAmount } from "@/lib/assets";
 
@@ -8,15 +9,16 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const { page, limit, skip, take } = parsePagination(url);
+    const companyId = await requireCompanyId();
     const [assets, total] = await Promise.all([
       db.fixedAsset.findMany({
-        where: { status: url.searchParams.get("status") ?? undefined },
+        where: { companyId, status: url.searchParams.get("status") ?? undefined },
         include: { account: { select: { code: true, name: true } } },
         orderBy: { code: "asc" },
         skip,
         take,
       }),
-      db.fixedAsset.count(),
+      db.fixedAsset.count({ where: { companyId } }),
     ]);
 
     return ok(
@@ -52,9 +54,11 @@ export async function POST(req: NextRequest) {
     if (body.method && !["STRAIGHT_LINE", "DECLINING"].includes(body.method)) return fail("طريقة إهلاك غير معروفة", 400);
 
     const code = await generateNumber("ASSET");
+    const companyId = await requireCompanyId();
     const asset = await db.fixedAsset.create({
       data: {
         code,
+        companyId,
         name: body.name,
         category: body.category ?? null,
         cost: body.cost,

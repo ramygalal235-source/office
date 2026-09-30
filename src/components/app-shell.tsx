@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { NAV } from "@/lib/nav";
 import { BRAND } from "@/lib/accounting/constants";
+import { CompanySwitcher } from "@/components/company-switcher";
 import { ROLE_LABELS } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -73,11 +74,16 @@ const ICONS: Record<string, LucideIcon> = {
 export function AppShell({
   user,
   brand,
+  activeCompanyId,
+  companies,
   children,
 }: {
   user: { name: string; username: string; role: string };
   /** هوية المكتب الديناميكية (تُعدَّل من الإعدادات) مع BRAND احتياطًا */
   brand?: { name: string; subtitle: string; primary: string };
+  /** الشركة النشطة (دفاتر مستقلة لكل شركة) وقائمة شركات النطاق */
+  activeCompanyId?: string;
+  companies?: { id: string; code: string; name: string; kind: string }[];
   children: React.ReactNode;
 }) {
   const b = brand ?? BRAND;
@@ -217,6 +223,12 @@ export function AppShell({
           >
             <Menu />
           </Button>
+
+          {activeCompanyId && companies && companies.length > 0 && (
+            <div className="ms-2 hidden sm:block">
+              <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
+            </div>
+          )}
 
           <div className="flex-1" />
 

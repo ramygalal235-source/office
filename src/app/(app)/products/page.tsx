@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { getSession } from "@/lib/auth";
 import { PageHeader } from "@/components/page-header";
 import { ProductsBoard, type BoardProduct } from "@/components/products-board";
@@ -9,7 +10,8 @@ export default async function ProductsPage() {
   const user = await getSession();
   if (!user) return null;
 
-  const products = await db.product.findMany({ orderBy: { name: "asc" }, take: 1000 });
+  const companyId = await requireCompanyId();
+  const products = await db.product.findMany({ where: { companyId }, orderBy: { name: "asc" }, take: 1000 });
 
   const rows: BoardProduct[] = products.map((p) => ({
     id: p.id,

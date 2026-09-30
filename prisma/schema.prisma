@@ -78,6 +78,7 @@ model ClientCompany {
   contactPhone        String?
   notes               String?
   isActive            Boolean  @default(true)
+  kind                String   @default("CLIENT") // OFFICE دفاتر المكتب | CLIENT شركة عميل
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -90,6 +91,18 @@ model ClientCompany {
   purchases           Purchase[]
   engagements         Engagement[]
   dmsDocuments        DmsDocument[]
+
+  // ===== دفاتر الشركة (النطاق المحاسبي) =====
+  journalEntries JournalEntry[]
+  safes          Safe[]
+  parties        Party[]
+  products       Product[]
+  stockMovements StockMovement[]
+  fixedAssets    FixedAsset[]
+  employees      Employee[]
+  payrollRuns    PayrollRun[]
+  budgets        Budget[]
+  payments       Payment[]
 }
 
 model TaxObligation {
@@ -368,6 +381,8 @@ model AuditLog {
 model Party {
   id             String   @id @default(cuid())
   code           String   @unique
+  companyId      String?
+  company        ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name           String
   type           String   @default("CUSTOMER") // CUSTOMER | SUPPLIER
   legalName      String?
@@ -391,11 +406,14 @@ model Party {
 
   @@index([type, isActive])
   @@index([name])
+  @@index([companyId])
 }
 
 model Safe {
   id             String   @id @default(cuid())
   code           String   @unique
+  companyId      String?
+  company        ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name           String
   type           String   @default("CASH") // CASH خزينة | BANK حساب بنكي
   accountId      String? // الحساب المقابل في دليل الحسابات
@@ -418,6 +436,8 @@ model Safe {
 model Payment {
   id        String   @id @default(cuid())
   number    String   @unique
+  companyId String?
+  company   ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   type      String // IN تحصيل | OUT صرف
   partyId   String?
   party     Party?   @relation(fields: [partyId], references: [id], onDelete: SetNull)
@@ -434,6 +454,8 @@ model Payment {
   notes      String?
   createdBy  String   @default("system")
   createdAt  DateTime @default(now())
+
+  @@index([companyId])
   updatedAt  DateTime @updatedAt
 
   @@index([type, date])
@@ -451,6 +473,7 @@ model JournalEntry {
   sourceType  String? // INVOICE | PURCHASE | PAYMENT | ASSET_DEPRECIATION | OPENING | MANUAL
   sourceId    String?
   companyId   String?
+  company     ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   status      String    @default("POSTED") // DRAFT | POSTED | REVERSED
   totalDebit  Float     @default(0)
   totalCredit Float     @default(0)
@@ -490,6 +513,8 @@ model JournalLine {
 model Product {
   id          String   @id @default(cuid())
   code        String   @unique
+  companyId   String?
+  company     ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name        String
   category    String?
   unit        String   @default("قطعة")
@@ -508,12 +533,15 @@ model Product {
 
   @@index([name])
   @@index([isActive])
+  @@index([companyId])
 }
 
 model StockMovement {
   id        String   @id @default(cuid())
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  companyId String?
+  company   ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   type      String // IN مشتريات | OUT مبيعات | ADJUST تسوية | OPENING رصيد افتتاحي | RETURN_IN عكس مبيعات | RETURN_OUT عكس مشتريات
   quantity  Float
   unitCost  Float    @default(0)
@@ -527,6 +555,7 @@ model StockMovement {
 
   @@index([productId, date])
   @@index([type])
+  @@index([companyId])
 }
 
 // ===== الأصول الثابتة والإهلاك =====
@@ -534,6 +563,8 @@ model StockMovement {
 model FixedAsset {
   id            String   @id @default(cuid())
   code          String   @unique
+  companyId     String?
+  company       ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name          String
   category      String?
   acquisitionDate DateTime
@@ -558,6 +589,7 @@ model FixedAsset {
   depreciations DepreciationEntry[]
 
   @@index([status])
+  @@index([companyId])
 }
 
 model DepreciationEntry {
@@ -582,6 +614,8 @@ model DepreciationEntry {
 model Employee {
   id              String   @id @default(cuid())
   code            String   @unique
+  companyId       String?
+  company         ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name            String
   jobTitle        String?
   department      String?
@@ -604,10 +638,13 @@ model Employee {
   payslips Payslip[]
 
   @@index([isActive])
+  @@index([companyId])
 }
 
 model PayrollRun {
   id          String   @id @default(cuid())
+  companyId   String?
+  company     ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   periodYear  Int
   periodMonth Int
   status      String   @default("DRAFT") // DRAFT | APPROVED | POSTED
@@ -623,7 +660,8 @@ model PayrollRun {
 
   payslips Payslip[]
 
-  @@unique([periodYear, periodMonth])
+  @@unique([companyId, periodYear, periodMonth])
+  @@index([companyId])
 }
 
 model Payslip {
@@ -650,6 +688,8 @@ model Payslip {
 model Budget {
   id         String   @id @default(cuid())
   name       String
+  companyId  String?
+  company    ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   fiscalYear Int
   type       String   @default("EXPENSE") // REVENUE | EXPENSE
   status     String   @default("DRAFT") // DRAFT | ACTIVE | CLOSED
@@ -660,6 +700,7 @@ model Budget {
   lines BudgetLine[]
 
   @@index([fiscalYear, type])
+  @@index([companyId])
 }
 
 model BudgetLine {

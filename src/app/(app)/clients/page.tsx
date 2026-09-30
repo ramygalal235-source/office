@@ -17,6 +17,7 @@ import {
 import { entityTypeLabel, legalFormLabel, obligationStatusLabel } from "@/components/status-badge";
 import { dueLabel, formatDate } from "@/lib/money";
 import { CompanyForm } from "./company-form";
+import { OpenBooksButton } from "./open-books-button";
 
 export const metadata = { title: "شركات العملاء | دفاتر المحاسب" };
 
@@ -26,16 +27,19 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
 
-  const where = q
-    ? {
-        OR: [
-          { nameAr: { contains: q } },
-          { nameEn: { contains: q } },
-          { code: { contains: q } },
-          { taxNumber: { contains: q } },
-        ],
-      }
-    : {};
+  const where = {
+    kind: { not: "OFFICE" }, // دفاتر المكتب لا تظهر كعميل
+    ...(q
+      ? {
+          OR: [
+            { nameAr: { contains: q } },
+            { nameEn: { contains: q } },
+            { code: { contains: q } },
+            { taxNumber: { contains: q } },
+          ],
+        }
+      : {}),
+  };
 
   const [items, total] = await Promise.all([
     db.clientCompany.findMany({
@@ -91,6 +95,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
                   <TableHead>أقرب التزام</TableHead>
                   <TableHead className="text-center">الالتزامات</TableHead>
                   <TableHead className="text-center">المهام</TableHead>
+                  <TableHead className="text-center">الدفاتر</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -141,6 +146,9 @@ export default async function ClientsPage({ searchParams }: { searchParams: Sear
                       </TableCell>
                       <TableCell className="tabular text-center">{c._count.obligations}</TableCell>
                       <TableCell className="tabular text-center">{c._count.tasks}</TableCell>
+                      <TableCell className="text-center">
+                        <OpenBooksButton companyId={c.id} companyName={c.nameAr} />
+                      </TableCell>
                     </TableRow>
                   );
                 })}

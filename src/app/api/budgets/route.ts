@@ -1,11 +1,14 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, handleDbError, ok } from "@/lib/accounting/api";
 
 /** قائمة الموازنات (بأسطرها) */
 export async function GET() {
   try {
+    const companyId = await requireCompanyId();
     const budgets = await db.budget.findMany({
+      where: { companyId },
       include: { lines: { include: { account: { select: { code: true, name: true } }, orderBy: { periodMonth: "asc" } } } },
       orderBy: [{ fiscalYear: "desc" }, { createdAt: "desc" }],
     });
@@ -39,9 +42,11 @@ export async function POST(req: NextRequest) {
     if (missing.length) return fail("حساب غير موجود في الدليل", 400);
 
     const code = await generateNumber("BUDGET");
+    const companyId = await requireCompanyId();
     const budget = await db.budget.create({
       data: {
         name: `${body?.type === "EXPENSE" ? "موازنة مصروفات" : "موازنة إيرادات"} ${fiscalYear} (${code})`,
+        companyId,
         fiscalYear,
         type: body!.type,
         status: "DRAFT",

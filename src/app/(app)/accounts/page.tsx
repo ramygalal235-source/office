@@ -1,5 +1,6 @@
 import { BookOpen } from "lucide-react";
 import { getAccountBalances } from "@/lib/accounting/ledger";
+import { requireCompanyId } from "@/lib/company-context";
 import { ACCOUNT_NATURE } from "@/lib/accounting/constants";
 import { formatMoney, round2 } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
@@ -20,7 +21,8 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default async function AccountsPage() {
-  const balances = await getAccountBalances();
+  const companyId = await requireCompanyId();
+  const balances = await getAccountBalances({}, companyId);
   const leaf = balances.filter((b) => !b.isGroup);
   const withMovement = leaf.filter((b) => b.balance !== 0);
 

@@ -23,13 +23,23 @@ export async function fiscalYearMonths(fiscalYear: number): Promise<{ startMonth
 }
 
 /** الفعلي لحساب واحد لشهر معين من القيود المرحَّلة */
-async function accountActual(accountId: string, year: number, month: number, isExpense: boolean): Promise<number> {
+async function accountActual(
+  accountId: string,
+  year: number,
+  month: number,
+  isExpense: boolean,
+  companyId?: string
+): Promise<number> {
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 1);
   const rows = await db.journalLine.findMany({
     where: {
       accountId,
-      journalEntry: { status: "POSTED", date: { gte: start, lt: end } },
+      journalEntry: {
+        status: "POSTED",
+        date: { gte: start, lt: end },
+        ...(companyId ? { companyId } : {}),
+      },
     },
     select: { debit: true, credit: true },
   });
@@ -71,7 +81,7 @@ export async function refreshBudgetActuals(budgetId: string, user = "system") {
         await db.budgetLine.update({ where: { id: line.id }, data: { actualAmount: 0 } });
         continue;
       }
-      const actual = await accountActual(line.accountId, m.year, m.month, isExpense);
+      const actual = await accountActual(line.accountId, m.year, m.month, isExpense, budget.companyId ?? undefined);
       await db.budgetLine.update({ where: { id: line.id }, data: { actualAmount: actual } });
       continue;
     }
@@ -79,7 +89,7 @@ export async function refreshBudgetActuals(budgetId: string, user = "system") {
     let actual = 0;
     for (const { year, month } of months) {
       if (new Date(year, month, 0) >= effectiveEnd) break;
-      actual += await accountActual(line.accountId, year, month, isExpense);
+      actual += await accountActual(line.accountId, year, month, isExpense, budget.companyId ?? undefined);
     }
     await db.budgetLine.update({ where: { id: line.id }, data: { actualAmount: round2(actual) } });
   }

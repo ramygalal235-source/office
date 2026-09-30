@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, getSessionUser, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
 import { firstIssue, optEnum, optNum, optText, reqDate, reqText } from "@/lib/validators";
 import { PAYMENT_METHODS, PAYMENT_TYPES } from "@/lib/domain";
@@ -26,7 +27,8 @@ export async function GET(req: NextRequest) {
     const type = url.searchParams.get("type") ?? "";
     const safeId = url.searchParams.get("safeId") ?? "";
 
-    const where = { ...(type ? { type } : {}), ...(safeId ? { safeId } : {}) };
+    const companyId = await requireCompanyId();
+    const where = { companyId, ...(type ? { type } : {}), ...(safeId ? { safeId } : {}) };
 
     const [items, total, sums, posted] = await Promise.all([
       db.payment.findMany({
@@ -61,8 +63,9 @@ export async function POST(req: NextRequest) {
     const user = getSessionUser(req);
     const number = await generateNumber(parsed.data.type === "IN" ? "PAYMENT_IN" : "PAYMENT_OUT");
 
+    const companyId = await requireCompanyId();
     const created = await db.payment.create({
-      data: { ...parsed.data, number, amount: round2(parsed.data.amount), partyId: parsed.data.partyId || null },
+      data: { ...parsed.data, number, companyId, amount: round2(parsed.data.amount), partyId: parsed.data.partyId || null },
       include: { party: true, safe: true },
     });
 

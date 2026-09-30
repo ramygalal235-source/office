@@ -36,10 +36,19 @@ function dateFilter(period: Period) {
 }
 
 /** أرصدة كل الحسابات (غير مجمّعة) عن فترة، مع الرصيد الافتتاحي */
-export async function getAccountBalances(period: Period = {}): Promise<AccountBalance[]> {
+export async function getAccountBalances(
+  period: Period = {},
+  companyId?: string
+): Promise<AccountBalance[]> {
   const entriesWhere = {
     status: "POSTED",
+    ...(companyId ? { companyId } : {}),
     date: dateFilter(period),
+  };
+  const beforeWhere = {
+    status: "POSTED",
+    ...(companyId ? { companyId } : {}),
+    date: { lt: period.from },
   };
 
   const [accounts, inPeriod, before] = await Promise.all([
@@ -58,7 +67,7 @@ export async function getAccountBalances(period: Period = {}): Promise<AccountBa
     period.from
       ? db.journalLine.groupBy({
           by: ["accountId"],
-          where: { journalEntry: { status: "POSTED", date: { lt: period.from } } },
+          where: { journalEntry: beforeWhere },
           _sum: { debit: true, credit: true },
         })
       : Promise.resolve([]),
@@ -153,8 +162,8 @@ export interface TrialBalanceRow {
   isGroup: boolean;
 }
 
-export async function getTrialBalance(period: Period = {}) {
-  const balances = await getAccountBalances(period);
+export async function getTrialBalance(period: Period = {}, companyId?: string) {
+  const balances = await getAccountBalances(period, companyId);
   const rows: TrialBalanceRow[] = balances
     .filter((b) => !b.isGroup || b.debit !== 0 || b.credit !== 0)
     .map((b) => ({
@@ -253,8 +262,11 @@ export interface FinancialStatement {
   equity: number;
 }
 
-export async function getFinancialStatement(period: Period = {}): Promise<FinancialStatement> {
-  const balances = await getAccountBalances(period);
+export async function getFinancialStatement(
+  period: Period = {},
+  companyId?: string
+): Promise<FinancialStatement> {
+  const balances = await getAccountBalances(period, companyId);
   const leaf = balances.filter((b) => !b.isGroup);
   const total = (types: string[], pick?: (b: AccountBalance) => number) =>
     sumMoney(leaf.filter((b) => types.includes(b.type)).map((b) => (pick ? pick(b) : Math.abs(b.balance))));
@@ -310,17 +322,31 @@ export interface PartyBalance {
   balance: number;
 }
 
-export async function getPartyBalances(type: "CUSTOMER" | "SUPPLIER" = "CUSTOMER"): Promise<PartyBalance[]> {
+export async function getPartyBalances(
+  type: "CUSTOMER" | "SUPPLIER" = "CUSTOMER",
+  companyId?: string
+): Promise<PartyBalance[]> {
   const [parties, invoices, purchases, payments] = await Promise.all([
-    db.party.findMany({ where: { type, isActive: true }, orderBy: { name: "asc" } }),
+    db.party.findMany({
+      where: { type, isActive: true, ...(companyId ? { companyId } : {}) },
+      orderBy: { name: "asc" },
+    }),
     db.invoice.groupBy({
       by: ["customerId"],
-      where: { customerId: { not: null }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: {
+        customerId: { not: null },
+        status: { notIn: ["DRAFT", "CANCELLED"] },
+        ...(companyId ? { companyId } : {}),
+      },
       _sum: { totalAmount: true },
     }),
     db.purchase.groupBy({
       by: ["supplierId"],
-      where: { supplierId: { not: null }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: {
+        supplierId: { not: null },
+        status: { notIn: ["DRAFT", "CANCELLED"] },
+        ...(companyId ? { companyId } : {}),
+      },
       _sum: { totalAmount: true },
     }),
     db.payment.groupBy({
@@ -328,6 +354,7 @@ export async function getPartyBalances(type: "CUSTOMER" | "SUPPLIER" = "CUSTOMER
       where: {
         partyId: { not: null },
         type: type === "CUSTOMER" ? "IN" : "OUT",
+        ...(companyId ? { companyId } : {}),
       },
       _sum: { amount: true },
     }),
@@ -358,24 +385,27 @@ export async function getPartyBalances(type: "CUSTOMER" | "SUPPLIER" = "CUSTOMER
 
 // ===== رصيد الخزائن =====
 
-export async function getSafeBalances() {
-  const safes = await db.safe.findMany({ where: { isActive: true }, orderBy: { code: "asc" } });
+export async function getSafeBalances(companyId?: string) {
+  const safes = await db.safe.findMany({
+    where: { isActive: true, ...(companyId ? { companyId } : {}) },
+    orderBy: { code: "asc" },
+  });
   if (!safes.length) return [];
 
   const grouped = await db.payment.groupBy({
     by: ["safeId"],
-    where: { safeId: { not: null } },
+    where: { safeId: { not: null }, ...(companyId ? { companyId } : {}) },
     _sum: { amount: true },
     _count: { _all: true },
   });
   const inAgg = await db.payment.groupBy({
     by: ["safeId"],
-    where: { safeId: { not: null }, type: "IN" },
+    where: { safeId: { not: null }, type: "IN", ...(companyId ? { companyId } : {}) },
     _sum: { amount: true },
   });
   const outAgg = await db.payment.groupBy({
     by: ["safeId"],
-    where: { safeId: { not: null }, type: "OUT" },
+    where: { safeId: { not: null }, type: "OUT", ...(companyId ? { companyId } : {}) },
     _sum: { amount: true },
   });
 

@@ -123,13 +123,32 @@ async function seedSequences() {
   console.log(`  • تم تهيئة ${seedData.sequences.length} تسلسل ترقيم للمستندات`);
 }
 
+// دفاتر المكتب: شركة خاصة (kind = OFFICE) تحمل الدفاتر الذاتية للمكتب
+async function seedOfficeCompany() {
+  const existing = await db.clientCompany.findUnique({ where: { code: "OFFICE" } });
+  if (existing) return existing;
+  const created = await db.clientCompany.create({
+    data: {
+      code: "OFFICE",
+      nameAr: "دفاتر المكتب",
+      entityType: "COMPANY",
+      kind: "OFFICE",
+      isActive: true,
+    },
+  });
+  console.log("  • تم إنشاء دفاتر المكتب (الشركة الخاصة بالنطاق المحاسبي)");
+  return created;
+}
+
 async function seedSafes() {
+  const office = await seedOfficeCompany();
   const cashbox = await db.safe.findUnique({ where: { code: "SAF-00001" } });
   if (!cashbox) {
     const cashAccount = await db.account.findUnique({ where: { code: "1101" } });
     await db.safe.create({
       data: {
         code: "SAF-00001",
+        companyId: office.id,
         name: "الخزينة الرئيسية",
         type: "CASH",
         accountId: cashAccount?.id ?? null,
@@ -138,6 +157,8 @@ async function seedSafes() {
       },
     });
     console.log("  • تم إنشاء الخزينة الرئيسية (مرتبطة بحساب 1101 النقدية بالصندوق)");
+  } else if (!cashbox.companyId) {
+    await db.safe.update({ where: { id: cashbox.id }, data: { companyId: office.id } });
   }
 }
 

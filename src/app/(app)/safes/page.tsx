@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { getSession } from "@/lib/auth";
 import { getSafeBalances } from "@/lib/accounting/ledger";
 import { PageHeader } from "@/components/page-header";
@@ -10,9 +11,10 @@ export default async function SafesPage() {
   const user = await getSession();
   if (!user) return null;
 
+  const companyId = await requireCompanyId();
   const [safes, balances, accounts] = await Promise.all([
-    db.safe.findMany({ orderBy: { code: "asc" } }),
-    getSafeBalances(),
+    db.safe.findMany({ where: { companyId }, orderBy: { code: "asc" } }),
+    getSafeBalances(companyId),
     db.account.findMany({ orderBy: { code: "asc" }, take: 200 }),
   ]);
 

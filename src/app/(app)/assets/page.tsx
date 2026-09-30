@@ -1,6 +1,7 @@
 import { Boxes, Trash2 } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
@@ -18,12 +19,14 @@ export const metadata = { title: "الأصول الثابتة | دفاتر ال�
 
 export default async function AssetsPage() {
   const session = await getSession();
+  const companyId = await requireCompanyId();
   const [assets, accounts, safes] = await Promise.all([
     db.fixedAsset.findMany({
+      where: { companyId },
       include: { account: { select: { code: true, name: true } } },
       orderBy: { code: "asc" },
     }),
-    db.safe.findMany({ where: { isActive: true }, select: { id: true, name: true, type: true }, orderBy: { name: "asc" } }),
+    db.safe.findMany({ where: { companyId, isActive: true }, select: { id: true, name: true, type: true }, orderBy: { name: "asc" } }),
     db.account.findMany({
       where: { code: { startsWith: "12" }, isGroup: false, isActive: true },
       select: { id: true, code: true, name: true },

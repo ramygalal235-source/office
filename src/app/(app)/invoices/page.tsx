@@ -1,6 +1,7 @@
 import { Plus, Receipt } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { formatDate, formatMoney, round2 } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
@@ -19,8 +20,10 @@ export const metadata = { title: "فواتير البيع | دفاتر المح�
 
 export default async function InvoicesPage() {
   const session = await getSession();
+  const companyId = await requireCompanyId();
   const [invoices, customers, accounts, products, sums] = await Promise.all([
     db.invoice.findMany({
+      where: { companyId },
       include: {
         customer: { select: { id: true, name: true } },
         items: { orderBy: { sortOrder: "asc" } },
@@ -28,11 +31,11 @@ export default async function InvoicesPage() {
       orderBy: { date: "desc" },
       take: 100,
     }),
-    db.party.findMany({ where: { type: "CUSTOMER", isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.party.findMany({ where: { companyId, type: "CUSTOMER", isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     db.account.findMany({ where: { type: "INCOME", isActive: true, isGroup: false }, select: { id: true, code: true, name: true }, orderBy: { code: "asc" } }),
-    db.product.findMany({ where: { isActive: true }, select: { id: true, code: true, name: true, salePrice: true, costPrice: true, unit: true }, orderBy: { name: "asc" } }),
+    db.product.findMany({ where: { companyId, isActive: true }, select: { id: true, code: true, name: true, salePrice: true, costPrice: true, unit: true }, orderBy: { name: "asc" } }),
     db.invoice.aggregate({
-      where: { status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: { companyId, status: { notIn: ["DRAFT", "CANCELLED"] } },
       _sum: { totalAmount: true, taxAmount: true, paidAmount: true },
     }),
   ]);

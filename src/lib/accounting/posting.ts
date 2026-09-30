@@ -358,6 +358,7 @@ async function applyStockMovements(
           type,
           quantity: qty,
           unitCost: cost,
+          companyId: (doc as { companyId?: string | null }).companyId ?? undefined,
           sourceType,
           sourceId,
           notes: `${note} — ${docNumber}`,
@@ -412,6 +413,7 @@ export async function postPayment(paymentId: string, createdBy = "system") {
     description: `${payment.type === "IN" ? "سند قبض" : "سند صرف"} ${payment.number}`,
     sourceType: "PAYMENT",
     sourceId: payment.id,
+    companyId: payment.companyId,
     createdBy,
     lines,
   });
@@ -441,6 +443,7 @@ export async function reverseJournalEntry(entryId: string, createdBy = "system")
       description: `عكس القيد ${entry.number} — ${entry.description}`,
       sourceType: "REVERSAL",
       sourceId: entry.id,
+      companyId: entry.companyId,
       status: "POSTED",
       totalDebit: entry.totalCredit,
       totalCredit: entry.totalDebit,

@@ -3,6 +3,7 @@
 // لأن الترحيل قرار محاسب يحمل توقيعًا. المراجعة البشرية تبقى عند بوابة الترحيل.
 import { db } from "@/lib/db";
 import { generateNumber } from "@/lib/accounting/api";
+import { getActiveCompanyId } from "@/lib/company-context";
 import { round2 } from "@/lib/money";
 import { DOCUMENT_TYPES } from "@/lib/domain";
 import { fieldByKey, type OcrField } from "./prompt";
@@ -25,17 +26,25 @@ function dateOf(fields: OcrField[]): Date {
   return d && !Number.isNaN(d.getTime()) ? d : new Date();
 }
 
-async function findOrCreateParty(name: string, type: "CUSTOMER" | "SUPPLIER") {
+async function findOrCreateParty(
+  name: string,
+  type: "CUSTOMER" | "SUPPLIER",
+  companyId?: string
+) {
   const trimmed = name.trim();
   if (!trimmed) return null;
-  const exact = await db.party.findFirst({ where: { type, name: { equals: trimmed } } });
+  const exact = await db.party.findFirst({ where: { type, name: { equals: trimmed }, ...(companyId ? { companyId } : {}) } });
   if (exact) return exact;
-  const loose = await db.party.findFirst({ where: { type, name: { contains: trimmed } }, orderBy: { createdAt: "asc" } });
+  const loose = await db.party.findFirst({
+    where: { type, name: { contains: trimmed }, ...(companyId ? { companyId } : {}) },
+    orderBy: { createdAt: "asc" },
+  });
   if (loose) return loose;
 
   const party = await db.party.create({
     data: {
       code: await generateNumber("PARTY"),
+      companyId: companyId ?? undefined,
       name: trimmed,
       type,
       notes: "أُنشئت تلقائيًا عند اعتماد وثيقة استُخرِجت آليًا",
@@ -57,15 +66,17 @@ export async function createDraftFromExtraction(
 ): Promise<CreatedDraft | null> {
   const type = (DOCUMENT_TYPES as readonly string[]).includes(docType) ? docType : "OTHER";
   const date = dateOf(fields);
+  // وثيقة بلا شركة → تُسجَّل على الشركة النشطة
+  const companyId = clientId ?? (await getActiveCompanyId());
 
   if (type === "INVOICE") {
-    const party = await findOrCreateParty(String(fieldByKey(fields, "party_name")?.value ?? ""), "CUSTOMER");
+    const party = await findOrCreateParty(String(fieldByKey(fields, "party_name")?.value ?? ""), "CUSTOMER", companyId);
     const total = num(fields, "total_amount") || num(fields, "net_amount");
     const tax = num(fields, "tax_amount");
     const net = num(fields, "net_amount") || (total - tax);
     const invoice = await db.invoice.create({
       data: {
-        companyId: clientId,
+        companyId,
         invoiceNumber: await generateNumber("INVOICE"),
         customerId: party?.id ?? null,
         date,
@@ -83,13 +94,13 @@ export async function createDraftFromExtraction(
   }
 
   if (type === "PURCHASE_INVOICE") {
-    const party = await findOrCreateParty(String(fieldByKey(fields, "party_name")?.value ?? ""), "SUPPLIER");
+    const party = await findOrCreateParty(String(fieldByKey(fields, "party_name")?.value ?? ""), "SUPPLIER", companyId);
     const total = num(fields, "total_amount") || num(fields, "net_amount");
     const tax = num(fields, "tax_amount");
     const net = num(fields, "net_amount") || (total - tax);
     const purchase = await db.purchase.create({
       data: {
-        companyId: clientId,
+        companyId,
         purchaseNumber: await generateNumber("PURCHASE"),
         supplierId: party?.id ?? null,
         date,
@@ -107,11 +118,12 @@ export async function createDraftFromExtraction(
   }
 
   if (type === "RECEIPT") {
-    const party = await findOrCreateParty(String(fieldByKey(fields, "party_name")?.value ?? ""), "CUSTOMER");
+    const party = await findOrCreateParty(String(fieldByKey(fields, "party_name")?.value ?? ""), "CUSTOMER", companyId);
     const amount = num(fields, "total_amount") || num(fields, "net_amount");
     const payment = await db.payment.create({
       data: {
         number: await generateNumber("PAYMENT_IN"),
+        companyId,
         type: "IN",
         partyId: party?.id ?? null,
         date,

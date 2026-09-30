@@ -8,6 +8,7 @@
 // أي إعادة إقلاع لا تُكرر شيئًا. لا نستخدم prisma migrate لأن الحزمة
 // النهائية بلا اتصال ولا ملف migrات — فقط المخطط الحالي.
 import { db } from "@/lib/db";
+import { backfillOfficeCompany } from "@/lib/company-context";
 
 type ColumnChange = { table: string; column: string; sql: string };
 type IndexChange = { table: string; name: string; columns: string[] };
@@ -16,6 +17,8 @@ type Migration = {
   version: number; // يترصد في PRAGMA user_version
   columns: ColumnChange[];
   indexes: IndexChange[];
+  dropIndexes?: { name: string }[]; // فهارس تُسقط إن وُجدت (تغيير تقييد)
+  seed?: () => Promise<void>; // خطوة بيانات idempotent عند تطبيق الإصدار
   note: string;
 };
 
@@ -53,6 +56,39 @@ const MIGRATIONS: Migration[] = [
     note: "disposalProceeds على FixedAsset",
     columns: [{ table: "FixedAsset", column: "disposalProceeds", sql: "disposalProceeds FLOAT" }],
     indexes: [],
+  },
+  {
+    // الإصدار 6: النطاق المحاسبي لكل شركة — دفاتر مستقلة لكل شركة عميل + المكتب
+    // نضيف companyId على نماذج الدفاتر، ونسقط فهرس فريدة الرواتب (سنة/شهر)
+    // ونستبدله بـ (شركة/سنة/شهر) حتى تشتغل كل شركة بشهرها مستقلة.
+    version: 6,
+    note: "النطاق المحاسبي لكل شركة (companyId) + دفاتر المكتب",
+    columns: [
+      { table: "ClientCompany", column: "kind", sql: "kind TEXT DEFAULT 'CLIENT'" },
+      { table: "Safe", column: "companyId", sql: "companyId TEXT" },
+      { table: "Party", column: "companyId", sql: "companyId TEXT" },
+      { table: "Product", column: "companyId", sql: "companyId TEXT" },
+      { table: "StockMovement", column: "companyId", sql: "companyId TEXT" },
+      { table: "FixedAsset", column: "companyId", sql: "companyId TEXT" },
+      { table: "Employee", column: "companyId", sql: "companyId TEXT" },
+      { table: "PayrollRun", column: "companyId", sql: "companyId TEXT" },
+      { table: "Budget", column: "companyId", sql: "companyId TEXT" },
+      { table: "Payment", column: "companyId", sql: "companyId TEXT" },
+    ],
+    dropIndexes: [{ name: "PayrollRun_periodYear_periodMonth_unique" }],
+    indexes: [
+      { table: "Safe", name: "Safe_companyId_idx", columns: ["companyId"] },
+      { table: "Party", name: "Party_companyId_idx", columns: ["companyId"] },
+      { table: "Product", name: "Product_companyId_idx", columns: ["companyId"] },
+      { table: "StockMovement", name: "StockMovement_companyId_idx", columns: ["companyId"] },
+      { table: "FixedAsset", name: "FixedAsset_companyId_idx", columns: ["companyId"] },
+      { table: "Employee", name: "Employee_companyId_idx", columns: ["companyId"] },
+      { table: "PayrollRun", name: "PayrollRun_companyId_idx", columns: ["companyId"] },
+      { table: "Budget", name: "Budget_companyId_idx", columns: ["companyId"] },
+      { table: "Payment", name: "Payment_companyId_idx", columns: ["companyId"] },
+      { table: "PayrollRun", name: "PayrollRun_companyId_periodYear_periodMonth_unique", columns: ["companyId", "periodYear", "periodMonth"] },
+    ],
+    seed: backfillOfficeCompany,
   },
 ];
 
@@ -99,12 +135,23 @@ export async function runSchemaMigrations(): Promise<{ from: number; to: number;
       added += 1;
     }
 
+    for (const drop of migration.dropIndexes ?? []) {
+      if (!(await indexExists(drop.name))) continue;
+      await db.$queryRaw({ sql: `DROP INDEX ${drop.name}` });
+      added += 1;
+    }
+
     for (const idx of migration.indexes) {
       if (await indexExists(idx.name)) continue;
+      const unique = idx.name.endsWith("_unique") ? "UNIQUE " : "";
       await db.$queryRaw({
-        sql: `CREATE INDEX IF NOT EXISTS ${idx.name} ON ${idx.table} (${idx.columns.join(", ")})`,
+        sql: `CREATE ${unique}INDEX IF NOT EXISTS ${idx.name} ON ${idx.table} (${idx.columns.join(", ")})`,
       });
       added += 1;
+    }
+
+    if (migration.seed) {
+      await migration.seed();
     }
   }
 

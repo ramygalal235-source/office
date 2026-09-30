@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { getOfficeBrand } from "@/lib/office-brand";
 import { getFinancialStatement, getPartyBalances, getTrialBalance } from "@/lib/accounting/ledger";
 import { formatDate, formatMoney, round2, sumMoney } from "@/lib/money";
@@ -33,7 +34,7 @@ export default async function PrintReportPage({ params }: { params: Promise<{ ki
   const now = new Date();
   const from = startOfYear();
   const period = `سنة ${now.getFullYear()} — من ${formatDate(from)} إلى ${formatDate(now)}`;
-  const brand = await getOfficeBrand();
+  const [brand, companyId] = await Promise.all([getOfficeBrand(), requireCompanyId()]);
 
   return (
     <div className="print-page">
@@ -49,11 +50,11 @@ export default async function PrintReportPage({ params }: { params: Promise<{ ki
         </div>
         <p style={{ fontSize: 11, color: "#555", margin: "0 0 14px" }}>{period}</p>
 
-        {k === "trial" && <TrialSection from={from} to={now} />}
-        {k === "statements" && <StatementsSection from={from} to={now} />}
-        {k === "receivables" && <ReceivablesSection />}
-        {k === "vat" && <VatSection from={from} to={now} />}
-        {k === "assets" && <AssetsSection>}
+        {k === "trial" && <TrialSection from={from} to={now} companyId={companyId} />}
+        {k === "statements" && <StatementsSection from={from} to={now} companyId={companyId} />}
+        {k === "receivables" && <ReceivablesSection companyId={companyId} />}
+        {k === "vat" && <VatSection from={from} to={now} companyId={companyId} />}
+        {k === "assets" && <AssetsSection companyId={companyId} />}
 
         <p className="print-doc-foot">
           صدر هذا التقرير آليًا من {brand.name} بتاريخ {formatDate(now)}
@@ -64,8 +65,8 @@ export default async function PrintReportPage({ params }: { params: Promise<{ ki
   );
 }
 
-async function TrialSection({ from, to }: { from: Date; to: Date }) {
-  const trial = await getTrialBalance({ from, to });
+async function TrialSection({ from, to, companyId }: { from: Date; to: Date; companyId: string }) {
+  const trial = await getTrialBalance({ from, to }, companyId);
   return (
     <section>
       <h2>{TITLES.trial} {trial.balanced ? "— متوازن" : `— فرق ${formatMoney(trial.balanced)}`}</h2>
@@ -102,8 +103,8 @@ async function TrialSection({ from, to }: { from: Date; to: Date }) {
   );
 }
 
-async function StatementsSection({ from, to }: { from: Date; to: Date }) {
-  const s = await getFinancialStatement({ from, to });
+async function StatementsSection({ from, to, companyId }: { from: Date; to: Date; companyId: string }) {
+  const s = await getFinancialStatement({ from, to }, companyId);
   return (
     <section>
       <h2>قائمة الدخل</h2>
@@ -163,8 +164,8 @@ async function StatementsSection({ from, to }: { from: Date; to: Date }) {
   );
 }
 
-async function ReceivablesSection() {
-  const [customers, suppliers] = await Promise.all([getPartyBalances("CUSTOMER"), getPartyBalances("SUPPLIER")]);
+async function ReceivablesSection({ companyId }: { companyId: string }) {
+  const [customers, suppliers] = await Promise.all([getPartyBalances("CUSTOMER", companyId), getPartyBalances("SUPPLIER", companyId)]);
   const render = (title: string, rows: { partyId: string; name: string; invoiceTotal: number; paid: number; balance: number }[]) => {
     const total = sumMoney(rows.map((r) => r.balance));
     return (
@@ -208,9 +209,9 @@ async function ReceivablesSection() {
   return <section>{render("ذمم العملاء", customers)}{render("ذمم الموردين", suppliers)}</section>;
 }
 
-async function VatSection({ from, to }: { from: Date; to: Date }) {
+async function VatSection({ from, to, companyId }: { from: Date; to: Date; companyId: string }) {
   const vat = await db.invoice.aggregate({
-    where: { date: { gte: from, lte: to }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+    where: { companyId, date: { gte: from, lte: to }, status: { notIn: ["DRAFT", "CANCELLED"] } },
     _sum: { subtotal: true, discount: true, taxAmount: true },
   });
   const outputVat = round2(vat._sum.taxAmount ?? 0);
@@ -218,7 +219,7 @@ async function VatSection({ from, to }: { from: Date; to: Date }) {
   const inputVat = round2(
     (
       await db.journalLine.aggregate({
-        where: { account: { code: "1108" }, journalEntry: { status: "POSTED", date: { gte: from, lte: to } } },
+        where: { account: { code: "1108" }, journalEntry: { companyId, status: "POSTED", date: { gte: from, lte: to } } },
         _sum: { debit: true },
       })
     )._sum.debit ?? 0
@@ -252,8 +253,9 @@ async function VatSection({ from, to }: { from: Date; to: Date }) {
   );
 }
 
-async function AssetsSection() {
+async function AssetsSection({ companyId }: { companyId: string }) {
   const assets = await db.fixedAsset.findMany({
+    where: { companyId },
     include: { account: { select: { code: true, name: true } }, depreciations: { select: { periodYear: true, periodMonth: true, amount: true } } },
     orderBy: { code: "asc" },
   });

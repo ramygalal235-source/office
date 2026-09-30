@@ -1,5 +1,6 @@
 import { BarChart3, CheckCircle2, XCircle } from "lucide-react";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { getFinancialStatement, getPartyBalances, getTrialBalance } from "@/lib/accounting/ledger";
 import { formatDate, formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
@@ -21,18 +22,20 @@ function startOfYear() {
 export default async function ReportsPage() {
   const yearStart = startOfYear();
   const now = new Date();
+  const companyId = await requireCompanyId();
 
   const [trial, statement, customers, suppliers, vat, assets] = await Promise.all([
-    getTrialBalance({ from: yearStart, to: now }),
-    getFinancialStatement({ from: yearStart, to: now }),
-    getPartyBalances("CUSTOMER"),
-    getPartyBalances("SUPPLIER"),
+    getTrialBalance({ from: yearStart, to: now }, companyId),
+    getFinancialStatement({ from: yearStart, to: now }, companyId),
+    getPartyBalances("CUSTOMER", companyId),
+    getPartyBalances("SUPPLIER", companyId),
     db.invoice.aggregate({
-      where: { date: { gte: yearStart, lte: now }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: { companyId, date: { gte: yearStart, lte: now }, status: { notIn: ["DRAFT", "CANCELLED"] } },
       _sum: { subtotal: true, discount: true, taxAmount: true, totalAmount: true },
       _count: { _all: true },
     }),
     db.fixedAsset.findMany({
+      where: { companyId },
       include: { account: { select: { code: true } }, depreciations: { select: { periodYear: true, amount: true } } },
       orderBy: { code: "asc" },
     }),

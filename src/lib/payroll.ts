@@ -42,17 +42,22 @@ export function computePayslip(
   return { gross, employerInsurance, insurance, taxable, tax, net, expenseTotal };
 }
 
-/** إنشاء شغل راتب لفترة (DRAFT) لكل الموظفين النشطين — فريد للفترة */
-export async function runPayroll(year: number, month: number, user: string = "system") {
+/** إنشاء شغل راتب لفترة (DRAFT) لكل الموظفين النشطين — فريد للفترة والشركة */
+export async function runPayroll(
+  year: number,
+  month: number,
+  user: string = "system",
+  companyId: string
+) {
   const existing = await db.payrollRun.findUnique({
-    where: { periodYear_periodMonth: { periodYear: year, periodMonth: month } },
+    where: { companyId_periodYear_periodMonth: { companyId, periodYear: year, periodMonth: month } },
   });
   if (existing) {
     throw new PostingError(`توجد شغل رواتب بالفعل للفترة ${month}/${year} بحالة «${existing.status}»`);
   }
 
   const [employees, params] = await Promise.all([
-    db.employee.findMany({ where: { isActive: true }, orderBy: { code: "asc" } }),
+    db.employee.findMany({ where: { isActive: true, companyId }, orderBy: { code: "asc" } }),
     getPayrollParams(),
   ]);
   if (employees.length === 0) throw new PostingError("لا يوجد موظفون نشطون — أضف الموظفين أولًا");
@@ -60,6 +65,7 @@ export async function runPayroll(year: number, month: number, user: string = "sy
   const date = new Date(year, month - 1, 28);
   const run = await db.payrollRun.create({
     data: {
+      companyId,
       periodYear: year,
       periodMonth: month,
       status: "DRAFT",
@@ -150,6 +156,7 @@ export async function postPayrollRun(runId: string, user: string = "system") {
     description: `رواتب ${run.periodMonth}/${run.periodYear} — ${run.payslips.length} موظفًا`,
     sourceType: "PAYROLL",
     sourceId: runId,
+    companyId: run.companyId,
     createdBy: user,
     lines: [
       { accountCode: PAYROLL_ACCOUNTS.salariesExpense, debit: expenseTotal, description: `رواتب ${run.periodMonth}/${run.periodYear} (تشمل مساهمة صاحب العمل)` },
@@ -195,6 +202,7 @@ export async function payPayrollRun(runId: string, safeId: string, user: string 
     description: `صرف رواتب ${run.periodMonth}/${run.periodYear} من ${safe.name}`,
     sourceType: "PAYROLL_PAYMENT",
     sourceId: runId,
+    companyId: run.companyId,
     createdBy: user,
     lines: [
       { accountCode: payableCode, debit: run.totalNet, description: `صرف رواتب ${run.periodMonth}/${run.periodYear}` },

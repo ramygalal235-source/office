@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, getSessionUser, handleDbError, ok } from "@/lib/accounting/api";
 import { firstIssue, optEnum, optNum, optText, reqText } from "@/lib/validators";
 import { SAFE_TYPES } from "@/lib/domain";
@@ -22,7 +23,8 @@ const safeSchema = z.object({
 
 export async function GET() {
   try {
-    const safes = await getSafeBalances();
+    const companyId = await requireCompanyId();
+    const safes = await getSafeBalances(companyId);
     return ok(safes, { types: SAFE_TYPES });
   } catch (e) {
     return handleDbError(e);
@@ -35,9 +37,10 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return fail(firstIssue(parsed.error));
 
     const user = getSessionUser(req);
+    const companyId = await requireCompanyId();
     const code = await generateNumber("SAFE");
     const created = await db.safe.create({
-      data: { ...parsed.data, code, accountId: parsed.data.accountId || null, openingBalance: round2(parsed.data.openingBalance) },
+      data: { ...parsed.data, code, companyId, accountId: parsed.data.accountId || null, openingBalance: round2(parsed.data.openingBalance) },
     });
     await auditLog("CREATE", "Safe", created.id, `إضافة ${created.type === "CASH" ? "خزينة" : "حساب بنكي"}: ${created.name}`, user?.username);
     return ok(created);

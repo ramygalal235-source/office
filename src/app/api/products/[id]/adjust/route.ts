@@ -27,6 +27,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         data: {
           productId: id,
           type: "ADJUST",
+          companyId: product.companyId ?? undefined,
           quantity: parsed.data.delta,
           unitCost: parsed.data.unitCost,
           notes: parsed.data.notes || "تسوية جرد",

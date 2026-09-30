@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireCompanyId } from "@/lib/company-context";
 import { getPartyBalances, getSafeBalances } from "@/lib/accounting/ledger";
 import { dueLabel, formatDate, formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
@@ -50,6 +51,9 @@ export default async function DashboardPage() {
   const in30 = new Date(now.getTime() + 30 * 86400000);
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
+  // النطاق المحاسبي: أرقام الدفاتر (مبيعات/مشتريات/نقدية/ذمم/أصول/رواتب)
+  // تُعرض لشركة النطاق النشطة، بينما إدارة المكتب (التزامات/مهام/شركات) تبقى شاملة.
+  const companyId = await requireCompanyId();
 
   const [
     clientsCount,
@@ -71,8 +75,8 @@ export default async function DashboardPage() {
     employeeAgg,
     latestPayroll,
   ] = await Promise.all([
-    db.clientCompany.count(),
-    db.clientCompany.count({ where: { isActive: true } }),
+    db.clientCompany.count({ where: { kind: "CLIENT" } }),
+    db.clientCompany.count({ where: { kind: "CLIENT", isActive: true } }),
     db.taxObligation.findMany({
       where: { dueDate: { gte: now, lte: in30 }, status: { in: ["PENDING", "IN_PROGRESS", "OVERDUE"] } },
       include: { company: { select: { nameAr: true, code: true } } },
@@ -90,51 +94,53 @@ export default async function DashboardPage() {
       where: { dueDate: { lt: now }, status: { in: ["TODO", "IN_PROGRESS", "REVIEW"] } },
     }),
     db.invoice.aggregate({
-      where: { date: { gte: monthStart, lte: monthEnd }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: { companyId, date: { gte: monthStart, lte: monthEnd }, status: { notIn: ["DRAFT", "CANCELLED"] } },
       _sum: { totalAmount: true },
       _count: { _all: true },
     }),
     db.purchase.aggregate({
-      where: { date: { gte: monthStart, lte: monthEnd }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: { companyId, date: { gte: monthStart, lte: monthEnd }, status: { notIn: ["DRAFT", "CANCELLED"] } },
       _sum: { totalAmount: true },
       _count: { _all: true },
     }),
     db.invoice.aggregate({
-      where: { status: { in: ["ISSUED", "PARTIAL", "OVERDUE"] } },
+      where: { companyId, status: { in: ["ISSUED", "PARTIAL", "OVERDUE"] } },
       _sum: { totalAmount: true, paidAmount: true },
     }),
     db.purchase.aggregate({
-      where: { status: { in: ["RECEIVED", "PARTIAL"] } },
+      where: { companyId, status: { in: ["RECEIVED", "PARTIAL"] } },
       _sum: { totalAmount: true, paidAmount: true },
     }),
     db.journalEntry.findMany({
+      where: { companyId },
       orderBy: { date: "desc" },
       take: 5,
       select: { id: true, number: true, date: true, description: true, status: true },
     }),
-    getSafeBalances(),
+    getSafeBalances(companyId),
     // بيانات الرسوم البيانية
     db.invoice.findMany({
-      where: { date: { gte: new Date(now.getFullYear(), now.getMonth() - 11, 1) }, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      where: { companyId, date: { gte: new Date(now.getFullYear(), now.getMonth() - 11, 1) }, status: { notIn: ["DRAFT", "CANCELLED"] } },
       select: { date: true, subtotal: true, taxAmount: true },
     }),
-    getPartyBalances("CUSTOMER"),
+    getPartyBalances("CUSTOMER", companyId),
     db.taxObligation.findMany({
       where: { dueDate: { lte: new Date(now.getFullYear(), now.getMonth() + 6, 0) }, status: { in: ["PENDING", "IN_PROGRESS", "OVERDUE"] } },
       select: { dueDate: true },
     }),
     // الأصول والرواتب (وحدات جديدة)
     db.fixedAsset.aggregate({
-      where: { status: "ACTIVE" },
+      where: { companyId, status: "ACTIVE" },
       _sum: { cost: true, accumulatedDepreciation: true },
       _count: { _all: true },
     }),
     db.employee.aggregate({
-      where: { isActive: true },
+      where: { companyId, isActive: true },
       _sum: { basicSalary: true, housingAllowance: true, transportAllowance: true, otherAllowance: true },
       _count: { _all: true },
     }),
     db.payrollRun.findFirst({
+      where: { companyId },
       orderBy: [{ periodYear: "desc" }, { periodMonth: "desc" }],
       select: { periodYear: true, periodMonth: true, status: true, totalNet: true, paidAt: true },
     }),
