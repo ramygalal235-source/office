@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Loader2, MoreHorizontal, Send, Trash2 } from "lucide-react";
+import { Eye, Loader2, MoreHorizontal, Printer, Send, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +63,11 @@ export function DocumentRowActions({
     setBusy(false);
   }
 
+  function printDoc() {
+    const kind = endpoint.includes("invoices") ? "invoice" : "purchase";
+    window.open(`/print/${kind}/${id}`, "_blank");
+  }
+
   async function remove() {
     if (busy) return;
     if (!confirm("حذف هذا المستند نهائيًا؟")) return;
@@ -84,6 +89,10 @@ export function DocumentRowActions({
           <DropdownMenuItem onClick={() => setViewing(true)}>
             <Eye />
             عرض السطور
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={printDoc}>
+            <Printer />
+            طباعة / PDF
           </DropdownMenuItem>
           {canPost && !doc.journalPosted && (
             <DropdownMenuItem onClick={post}>
@@ -135,6 +144,12 @@ export function DocumentRowActions({
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={printDoc}>
+              <Printer className="size-3.5" />
+              طباعة / PDF
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

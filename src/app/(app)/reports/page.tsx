@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getFinancialStatement, getPartyBalances, getTrialBalance } from "@/lib/accounting/ledger";
 import { formatDate, formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
+import { PrintReportLink } from "@/components/print-report-link";
 import { StatCard } from "@/components/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +80,7 @@ export default async function ReportsPage() {
           <Card>
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle className="text-sm">ميزان المراجعة</CardTitle>
+              <div className="flex items-center gap-2">
               <Badge variant={trial.balanced ? "success" : "destructive"}>
                 {trial.balanced ? (
                   <>
@@ -134,6 +136,9 @@ export default async function ReportsPage() {
 
         {/* ===== القوائم المالية ===== */}
         <TabsContent value="statements">
+          <div className="mb-3 flex justify-start">
+            <PrintReportLink kind="statements" />
+          </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -175,6 +180,9 @@ export default async function ReportsPage() {
 
         {/* ===== الذمم ===== */}
         <TabsContent value="receivables">
+          <div className="mb-3 flex justify-start">
+            <PrintReportLink kind="receivables" />
+          </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <PartyTable title="ذمم العملاء" rows={customers} tone="warning" />
             <PartyTable title="ذمم الموردين" rows={suppliers} tone="info" />
@@ -188,6 +196,7 @@ export default async function ReportsPage() {
               <CardTitle className="text-sm">
                 ملخص ضريبة القيمة المضافة — سنة {now.getFullYear()}
               </CardTitle>
+              <PrintReportLink kind="vat" />
             </CardHeader>
             <CardContent>
               <Line label="صافي المبيعات الخاضعة للضريبة" value={netSales} />

@@ -179,7 +179,23 @@ function createWindow(port) {
   });
 
   // لا مغادرة 127.0.0.1 — البرنامج شبكة محلية مغلقة
-  mainWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  // (تُفتح صفحات الطباعة في نافذة فرعية من نفس الأصل)
+  mainWin.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\/(127\.0\.0\.1|localhost):\d+/.test(url)) {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          width: 950,
+          height: 1150,
+          parent: mainWin,
+          title: "الطباعة",
+          autoHideMenuBar: true,
+          webPreferences: { contextIsolation: true, nodeIntegration: false },
+        },
+      };
+    }
+    return { action: "deny" };
+  });
   mainWin.webContents.on("will-navigate", (e, url) => {
     if (!/^https?:\/\/(127\.0\.0\.1|localhost):\d+/.test(url)) e.preventDefault();
   });
