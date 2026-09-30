@@ -128,7 +128,7 @@ function check(name, cond, detail = "") {
   const iconKeys = new Set([...iconsBlock.matchAll(/^\s{2}(\w+),?\s*$/gm)].map((m) => m[1]));
 
   const navItems = navSrc.match(/\{ href: "[^"]+"[^}]*\}/g) ?? [];
-  check("nav/16 عنصرًا", navItems.length === 16, `حصلنا على ${navItems.length}`);
+  check("nav/20 عنصرًا", navItems.length === 20, `حصلنا على ${navItems.length}`);
   for (const block of navItems) {
     const href = block.match(/href:\s*"([^"]+)"/)[1];
     const icon = block.match(/icon:\s*"([^"]+)"/)?.[1];

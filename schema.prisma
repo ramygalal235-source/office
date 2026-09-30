@@ -613,6 +613,7 @@ model PayrollRun {
   totalDeductions Float @default(0)
   totalNet    Float    @default(0)
   journalEntryId String?
+  paidAt         DateTime? // وقت صرف الصافي من الخزينة/البنك
   notes       String?
   createdBy   String   @default("system")
   createdAt   DateTime @default(now())

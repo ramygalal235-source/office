@@ -33,6 +33,13 @@ const MIGRATIONS: Migration[] = [
     ],
     indexes: [{ table: "Invoice", name: "Invoice_etaStatus_idx", columns: ["etaStatus"] }],
   },
+  {
+    // الإصدار 3: تتبع صرف الرواتب
+    version: 3,
+    note: "paidAt على PayrollRun",
+    columns: [{ table: "PayrollRun", column: "paidAt", sql: "paidAt DATETIME" }],
+    indexes: [],
+  },
 ];
 
 const LATEST_VERSION = MIGRATIONS.reduce((m, x) => Math.max(m, x.version), 1);

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
+  Banknote,
   BarChart3,
   BookOpen,
+  Boxes,
   Briefcase,
   Building2,
   CalendarClock,
@@ -47,6 +49,10 @@ import {
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard,
+  Boxes,
+  UserRound,
+  Banknote,
+  Target,
   Briefcase,
   Building2,
   CalendarClock,

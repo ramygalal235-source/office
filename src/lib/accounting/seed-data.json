@@ -195,6 +195,13 @@
       "isGroup": false
     },
     {
+      "code": "2110",
+      "parentCode": "21",
+      "name": "رواتب وأجور مستحقة",
+      "type": "LIABILITY",
+      "isGroup": false
+    },
+    {
       "code": "3",
       "name": "حقوق الملكية",
       "type": "EQUITY",

@@ -39,6 +39,10 @@ export const NAV: NavGroup[] = [
       { href: "/safes", label: "الخزائن والبنوك", icon: "Wallet" },
       { href: "/payments", label: "التحصيل والدفع", icon: "ArrowLeftRight" },
       { href: "/journal", label: "قيود اليومية", icon: "ScrollText" },
+      { href: "/assets", label: "الأصول الثابتة", icon: "Boxes" },
+      { href: "/employees", label: "الموظفون", icon: "UserRound" },
+      { href: "/payroll", label: "الرواتب", icon: "Banknote" },
+      { href: "/budgets", label: "الموازنات", icon: "Target" },
     ],
   },
   {
