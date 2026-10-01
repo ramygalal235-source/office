@@ -24,7 +24,7 @@ export default async function ReportsPage() {
   const now = new Date();
   const companyId = await requireCompanyId();
 
-  const [trial, statement, customers, suppliers, vat, assets] = await Promise.all([
+  const [trial, statement, customers, suppliers, vat, assets, agingInvoices] = await Promise.all([
     getTrialBalance({ from: yearStart, to: now }, companyId),
     getFinancialStatement({ from: yearStart, to: now }, companyId),
     getPartyBalances("CUSTOMER", companyId),
@@ -39,10 +39,48 @@ export default async function ReportsPage() {
       include: { account: { select: { code: true } }, depreciations: { select: { periodYear: true, amount: true } } },
       orderBy: { code: "asc" },
     }),
+    db.invoice.findMany({
+      where: { companyId, status: { notIn: ["DRAFT", "CANCELLED"] } },
+      select: { customerId: true, totalAmount: true, paidAmount: true, dueDate: true, date: true },
+    }),
   ]);
 
   const receivable = sumMoney(customers.map((c) => Math.max(0, c.balance)));
   const payable = sumMoney(suppliers.map((s) => Math.max(0, s.balance)));
+
+  // ===== تحليل أعمار الذمم (ذمم العملاء) =====
+  const DAY = 86400000;
+  const agingDefs = [
+    { key: "overdue", label: "متأخرة" },
+    { key: "b1", label: "1–30 يوم" },
+    { key: "b2", label: "31–60 يوم" },
+    { key: "b3", label: "61–90 يوم" },
+    { key: "b4", label: "+90 يوم" },
+  ];
+  const agingMap = new Map<string, { name: string; total: number; cells: Record<string, number> }>();
+  for (const inv of agingInvoices) {
+    const out = round2(inv.totalAmount - (inv.paidAmount ?? 0));
+    if (out <= 0.005 || !inv.customerId) continue;
+    const ref = inv.dueDate ?? inv.date;
+    const daysLate = Math.floor((now.getTime() - ref.getTime()) / DAY);
+    const key = daysLate < 0 ? "overdue" : daysLate <= 30 ? "b1" : daysLate <= 60 ? "b2" : daysLate <= 90 ? "b3" : "b4";
+    let row = agingMap.get(inv.customerId);
+    if (!row) {
+      row = { name: inv.customerId, total: 0, cells: Object.fromEntries(agingDefs.map((d) => [d.key, 0])) };
+      agingMap.set(inv.customerId, row);
+    }
+    row.cells[key] = round2(row.cells[key] + out);
+    row.total = round2(row.total + out);
+  }
+  for (const c of customers) if (c.balance > 0 && agingMap.has(c.partyId)) agingMap.get(c.partyId)!.name = c.name;
+  const agingRows = [...agingMap.entries()]
+    .map(([id, r]) => ({ id, name: r.name, total: r.total, cells: r.cells }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 12);
+  const agingTotals: Record<string, number> = Object.fromEntries(
+    agingDefs.map((d) => [d.key, round2(agingRows.reduce((a, r) => a + r.cells[d.key], 0))])
+  );
+  const agingGrand = round2(agingRows.reduce((a, r) => a + r.total, 0));
 
   // ملخص ضريبة القيمة المضافة على فواتير البيع
   const outputVat = round2(vat._sum.taxAmount ?? 0);
@@ -195,6 +233,54 @@ export default async function ReportsPage() {
             <PartyTable title="ذمم العملاء" rows={customers} tone="warning" />
             <PartyTable title="ذمم الموردين" rows={suppliers} tone="info" />
           </div>
+
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle className="text-sm">تحليل أعمار الذمم — ذمم العملاء (حسب تاريخ الاستحقاق)</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {agingRows.length === 0 ? (
+                <p className="p-6 text-center text-sm text-muted-foreground">لا توجد ذمم عملاء مفتوحة.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>العميل</TableHead>
+                      {agingDefs.map((d) => (
+                        <TableHead key={d.key} className="text-left">{d.label}</TableHead>
+                      ))}
+                      <TableHead className="text-left">الإجمالي</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {agingRows.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="text-sm font-medium">{r.name}</TableCell>
+                        {agingDefs.map((d) => (
+                          <TableCell key={d.key} className={`tabular text-left text-sm ${r.cells[d.key] > 0 && d.key === "overdue" ? "font-semibold text-destructive" : ""}`}>
+                            {r.cells[d.key] > 0 ? formatMoney(r.cells[d.key]) : "—"}
+                          </TableCell>
+                        ))}
+                        <TableCell className="tabular text-left text-sm font-semibold">{formatMoney(r.total)}</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-muted/40">
+                      <TableCell className="text-sm font-bold">الإجمالي</TableCell>
+                      {agingDefs.map((d) => (
+                        <TableCell key={d.key} className="tabular text-left text-sm font-bold">
+                          {agingTotals[d.key] > 0 ? formatMoney(agingTotals[d.key]) : "—"}
+                        </TableCell>
+                      ))}
+                      <TableCell className="tabular text-left text-sm font-bold">{formatMoney(agingGrand)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              )}
+              <p className="p-3 text-xs text-muted-foreground">
+                تُصنَّف كل فاتورة غير محصلة كاملة حسب تاريخ الاستحقاق (أو تاريخ الفاتورة إن لم يوجد). «متأخرة» = تجاوزت تاريخ الاستحقاق.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ===== ملخص القيمة المضافة ===== */}

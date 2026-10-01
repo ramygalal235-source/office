@@ -383,6 +383,94 @@ export async function getPartyBalances(
   });
 }
 
+// ===== كشف حساب طرف (عميل/مورد) =====
+// المصدر: سطور اليومية المرتبطة بالطرف (partyId) + الرصيد الافتتاحي المسجل.
+// الرصيد موجب دائمًا في جهة الطبع (مدين للعملاء، دائن للموردين).
+
+export interface PartyStatementRow {
+  date: Date;
+  entryNumber: string;
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface PartyStatement {
+  party: {
+    id: string;
+    name: string;
+    code: string;
+    type: string;
+    taxNumber: string | null;
+    phone: string | null;
+  };
+  opening: number;
+  rows: PartyStatementRow[];
+  totals: { debit: number; credit: number; closing: number };
+}
+
+export async function getPartyStatement(partyId: string, period: Period = {}): Promise<PartyStatement | null> {
+  const party = await db.party.findUnique({
+    where: { id: partyId },
+    select: { id: true, name: true, code: true, type: true, taxNumber: true, phone: true, openingBalance: true, balanceSide: true },
+  });
+  if (!party) return null;
+
+  const natureDebit = party.balanceSide !== "CREDIT";
+
+  const [lines, openingAgg] = await Promise.all([
+    db.journalLine.findMany({
+      where: {
+        partyId,
+        journalEntry: { status: "POSTED", ...(period.from || period.to ? { date: dateFilter(period) } : {}) },
+      },
+      include: { journalEntry: { select: { number: true, date: true, description: true } } },
+      orderBy: [{ journalEntry: { date: "asc" } }, { sortOrder: "asc" }],
+    }),
+    period.from
+      ? db.journalLine.aggregate({
+          where: { partyId, journalEntry: { status: "POSTED", date: { lt: period.from } } },
+          _sum: { debit: true, credit: true },
+        })
+      : Promise.resolve({ _sum: { debit: null, credit: null } }),
+  ]);
+
+  const rawOpening = round2(party.openingBalance + (openingAgg._sum.debit ?? 0) - (openingAgg._sum.credit ?? 0));
+  const opening = natureDebit ? rawOpening : -rawOpening;
+
+  let running = opening;
+  const rows: PartyStatementRow[] = lines.map((l) => {
+    running = natureDebit ? running + l.debit - l.credit : running - l.debit + l.credit;
+    return {
+      date: l.journalEntry.date,
+      entryNumber: l.journalEntry.number,
+      description: l.description || l.journalEntry.description,
+      debit: l.debit,
+      credit: l.credit,
+      balance: round2(running),
+    };
+  });
+
+  return {
+    party: {
+      id: party.id,
+      name: party.name,
+      code: party.code,
+      type: party.type,
+      taxNumber: party.taxNumber,
+      phone: party.phone,
+    },
+    opening,
+    rows,
+    totals: {
+      debit: round2(sumMoney(lines.map((l) => l.debit))),
+      credit: round2(sumMoney(lines.map((l) => l.credit))),
+      closing: round2(running),
+    },
+  };
+}
+
 // ===== رصيد الخزائن =====
 
 export async function getSafeBalances(companyId?: string) {

@@ -4,7 +4,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Pencil, Plus, Search, Trash2, UserRound, Users } from "lucide-react";
+import { FileText, Pencil, Plus, Search, Trash2, UserRound, Users } from "lucide-react";
 import { apiFetch } from "@/lib/client-api";
 import { PARTY_TYPES } from "@/lib/domain";
 import { formatMoney } from "@/lib/money";
@@ -292,6 +292,14 @@ export function PartiesBoard({ initialParties, userRole }: { initialParties: Boa
                     </td>
                     <td className="p-3">
                       <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => window.open(`/print/party-statement/${p.id}`, "_blank")}
+                          title="كشف حساب (طباعة/PDF)"
+                        >
+                          <FileText className="size-4" />
+                        </Button>
                         <Button size="icon" variant="ghost" onClick={() => openEdit(p)} title="تعديل">
                           <Pencil className="size-4" />
                         </Button>
