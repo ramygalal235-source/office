@@ -11,7 +11,7 @@ import { db } from "@/lib/db";
 import { backfillOfficeCompany } from "@/lib/company-context";
 
 type ColumnChange = { table: string; column: string; sql: string };
-type IndexChange = { table: string; name: string; columns: string[] };
+type IndexChange = { table: string; name: string; columns: string[]; unique?: boolean };
 
 type Migration = {
   version: number; // يترصد في PRAGMA user_version
@@ -120,6 +120,47 @@ const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    // الإصدار 8: إغلاق الشهر (MonthClose) + الفواتير المتكررة (RecurringInvoice)
+    version: 8,
+    note: "جدولا MonthClose و RecurringInvoice + ربط Invoice.recurringId",
+    columns: [{ table: "Invoice", column: "recurringId", sql: "recurringId TEXT" }],
+    indexes: [
+      { table: "Invoice", name: "Invoice_recurringId_idx", columns: ["recurringId"] },
+      { table: "MonthClose", name: "MonthClose_companyId_year_month_unique", columns: ["companyId", "year", "month"], unique: true },
+      { table: "MonthClose", name: "MonthClose_companyId_idx", columns: ["companyId"] },
+      { table: "RecurringInvoice", name: "RecurringInvoice_companyId_active_idx", columns: ["companyId", "active"] },
+      { table: "RecurringInvoice", name: "RecurringInvoice_nextDueDate_idx", columns: ["nextDueDate"] },
+    ],
+    sql: [
+      `CREATE TABLE IF NOT EXISTS "MonthClose" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "companyId" TEXT NOT NULL,
+        "year" INTEGER NOT NULL,
+        "month" INTEGER NOT NULL,
+        "closedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "closedBy" TEXT NOT NULL,
+        "checks" TEXT NOT NULL,
+        CONSTRAINT "MonthClose_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "ClientCompany" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+      )`,
+      `CREATE TABLE IF NOT EXISTS "RecurringInvoice" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "companyId" TEXT,
+        "name" TEXT NOT NULL,
+        "customerId" TEXT,
+        "amount" FLOAT NOT NULL,
+        "frequency" TEXT NOT NULL DEFAULT 'MONTHLY',
+        "notes" TEXT,
+        "active" BOOLEAN NOT NULL DEFAULT true,
+        "nextDueDate" DATETIME NOT NULL,
+        "lastGeneratedAt" DATETIME,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL,
+        CONSTRAINT "RecurringInvoice_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "ClientCompany" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+        CONSTRAINT "RecurringInvoice_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Party" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+      )`,
+    ],
+  },
 ];
 
 const LATEST_VERSION = MIGRATIONS.reduce((m, x) => Math.max(m, x.version), 1);
@@ -179,7 +220,7 @@ export async function runSchemaMigrations(): Promise<{ from: number; to: number;
 
     for (const idx of migration.indexes) {
       if (await indexExists(idx.name)) continue;
-      const unique = idx.name.endsWith("_unique") ? "UNIQUE " : "";
+      const unique = idx.unique ?? idx.name.endsWith("_unique") ? "UNIQUE " : "";
       await db.$queryRaw({
         sql: `CREATE ${unique}INDEX IF NOT EXISTS ${idx.name} ON ${idx.table} (${idx.columns.join(", ")})`,
       });

@@ -1,6 +1,8 @@
 import { BarChart3, CheckCircle2, XCircle } from "lucide-react";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { requireCompanyId } from "@/lib/company-context";
+import { MonthCloseCard } from "./month-close-card";
 import { getFinancialStatement, getPartyBalances, getTrialBalance } from "@/lib/accounting/ledger";
 import { formatDate, formatMoney, round2, sumMoney } from "@/lib/money";
 import { PageHeader } from "@/components/page-header";
@@ -22,7 +24,7 @@ function startOfYear() {
 export default async function ReportsPage() {
   const yearStart = startOfYear();
   const now = new Date();
-  const companyId = await requireCompanyId();
+  const [companyId, session] = await Promise.all([requireCompanyId(), getSession()]);
 
   const [trial, statement, customers, suppliers, vat, assets, agingInvoices] = await Promise.all([
     getTrialBalance({ from: yearStart, to: now }, companyId),
@@ -119,6 +121,7 @@ export default async function ReportsPage() {
           <TabsTrigger value="receivables">ذمم العملاء والموردين</TabsTrigger>
           <TabsTrigger value="vat">ملخص القيمة المضافة</TabsTrigger>
           <TabsTrigger value="assets">الأصول الثابتة</TabsTrigger>
+          <TabsTrigger value="close">إغلاق الشهر</TabsTrigger>
         </TabsList>
 
         {/* ===== ميزان المراجعة ===== */}
@@ -371,6 +374,11 @@ export default async function ReportsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ===== إغلاق الشهر ===== */}
+        <TabsContent value="close">
+          <MonthCloseCard userRole={session?.role ?? "viewer"} />
         </TabsContent>
       </Tabs>
 

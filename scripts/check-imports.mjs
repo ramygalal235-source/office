@@ -150,20 +150,30 @@ for (const file of files) {
   for (const m of src.matchAll(/\bdb\.(\w+)\.(?:create|update|upsert)\s*\(/g)) {
     const model = findModel(m[1]);
     if (!model) continue;
-    const dataIdx = src.indexOf("data:", m.index + m[0].length);
-    if (dataIdx === -1 || dataIdx - m.index > 4000) continue;
-    const open = src.indexOf("{", dataIdx);
+    // نبحث عن data: داخل الاستدعاء نفسه فقط (توازن الأقواس) —
+    // البحث في بقية الملف كان يلتقط data: من استدعاء لاحق وينسبه خطأً
+    const callOpen = m.index + m[0].length - 1;
+    let cd = 0, callEnd = -1;
+    for (let i = callOpen; i < src.length; i++) {
+      const ch = src[i];
+      if (ch === "(" || ch === "{") cd++;
+      else if (ch === ")" || ch === "}") { cd--; if (cd === 0) { callEnd = i; break; } }
+    }
+    if (callEnd === -1 || callEnd - m.index > 8000) continue;
+    const range = src.slice(callOpen, callEnd + 1);
+    const dataIdx = range.indexOf("data:");
+    if (dataIdx === -1) continue;
+    const open = range.indexOf("{", dataIdx);
     if (open === -1) continue;
     // data: متغير (ليس كائنًا محددًا) — لا نستطيع فحصه ساكنًا فنتركه
-    // وإلا نلتقط أول قوس في الملف التالي ونفهمه خطأً
-    if (src.slice(dataIdx + 5, open).replace(/\/\/[^\n]*/g, "").trim() !== "") continue;
+    if (range.slice(dataIdx + 5, open).replace(/\/\/[^\n]*/g, "").trim() !== "") continue;
     let depth = 0, end = -1;
-    for (let i = open; i < src.length; i++) {
-      if (src[i] === "{") depth++;
-      else if (src[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
+    for (let i = open; i < range.length; i++) {
+      if (range[i] === "{") depth++;
+      else if (range[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
     }
     if (end === -1) continue;
-    const body = src.slice(open + 1, end);
+    const body = range.slice(open + 1, end);
     let d = 0;
     for (const line of body.split("\n")) {
       if (d === 0) {

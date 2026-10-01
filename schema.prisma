@@ -95,6 +95,8 @@ model ClientCompany {
   // ===== دفاتر الشركة (النطاق المحاسبي) =====
   journalEntries JournalEntry[]
   bankTransactions BankTransaction[]
+  monthCloses      MonthClose[]
+  recurringInvoices RecurringInvoice[]
   safes          Safe[]
   parties        Party[]
   products       Product[]
@@ -270,12 +272,16 @@ model Invoice {
   etaStatusAt    DateTime?
   etaError       String?  // سبب الرفض/الفشل من الهيئة
 
+  recurringId String?
+  recurring   RecurringInvoice? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+
   items InvoiceItem[]
 
   @@index([status])
   @@index([date])
   @@index([customerId])
   @@index([etaStatus])
+  @@index([recurringId])
 }
 
 model InvoiceItem {
@@ -404,6 +410,7 @@ model Party {
   invoices  Invoice[]
   purchases Purchase[]
   payments  Payment[]
+  recurringInvoices RecurringInvoice[]
 
   @@index([type, isActive])
   @@index([name])
@@ -1042,4 +1049,48 @@ model BankTransaction {
   @@index([safeId, date])
   @@index([companyId])
   @@index([status])
+}
+
+// ===== إغلاق الشهر =====
+// سجل إغلاق فترة شهرية: لقطة الفحوصات لحظة الإغلاق. إغلاق الفترة يمنع
+// أي قيد بتاريخ داخلها (يُعاد الفتح من نفس الشاشة).
+
+model MonthClose {
+  id        String   @id @default(cuid())
+  companyId String
+  company   ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  year      Int
+  month     Int
+  closedAt  DateTime @default(now())
+  closedBy  String
+  checks    String   // JSON — لقطة نتائج الفحوصات لحظة الإغلاق
+
+  @@unique([companyId, year, month])
+  @@index([companyId])
+}
+
+// ===== الفواتير المتكررة =====
+// نموذج فاتورة دورية (إيجار، اشتراك، أتعاب ثابتة...) يولّد مسودة فاتورة
+// تلقائيًا عند كل استحقاق ويُقدَّم موعده التالي.
+
+model RecurringInvoice {
+  id          String   @id @default(cuid())
+  companyId   String?
+  company     ClientCompany? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  name        String // تسمية داخلية: إيجار المكتب، اشتراك شهري...
+  customerId  String?
+  customer    Party?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  amount      Float // إجمالي الفاتورة المتولد
+  frequency   String   @default("MONTHLY") // MONTHLY | QUARTERLY | ANNUALLY
+  notes       String?
+  active      Boolean  @default(true)
+  nextDueDate DateTime // الاستحقاق التالي
+  lastGeneratedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  generatedInvoices Invoice[]
+
+  @@index([companyId, active])
+  @@index([nextDueDate])
 }

@@ -26,7 +26,7 @@ function check(name, cond, detail = "") {
   const b = read("prisma/schema.prisma");
   check("schema/مطابقان نصيًا", a === b);
   const models = [...a.matchAll(/^model (\w+) \{/gm)].map((m) => m[1]);
-  check("schema/44 نموذجًا", models.length === 44, `حصلنا على ${models.length}`);
+  check("schema/46 نموذجًا", models.length === 46, `حصلنا على ${models.length}`);
   globalThis.__models = new Set(models);
 }
 
@@ -52,7 +52,7 @@ function check(name, cond, detail = "") {
 
   const handlersSrc = read("src/lib/automation/handlers.ts");
   const handlerKeys = [...handlersSrc.matchAll(/handlers\["([^"]+)"\]\s*=/g)].map((m) => m[1]);
-  check("handlers/9 معالجات", handlerKeys.length === 9, `حصلنا على ${handlerKeys.length}: ${handlerKeys.join(",")}`);
+  check("handlers/10 معالجات", handlerKeys.length === 10, `حصلنا على ${handlerKeys.length}: ${handlerKeys.join(",")}`);
   check("handlers/مفاتيح فريدة", new Set(handlerKeys).size === handlerKeys.length);
 
   for (const r of rules) {

@@ -290,3 +290,83 @@ handlers["document.extract"] = async (payload) => {
     model: payload.model ? String(payload.model) : undefined,
   });
 };
+
+// ---------------------------------------------------------------- الفواتير المتكررة
+
+const RECURRING_MONTHS: Record<string, number> = { MONTHLY: 1, QUARTERLY: 3, ANNUALLY: 12 };
+
+/** إضافة عدد أشهر مع تثبيت اليوم وخصم نهاية الشهر (15/12 + شهر = 15/1) */
+function addMonthsClamped(d: Date, months: number): Date {
+  const next = new Date(d.getFullYear(), d.getMonth() + months, 1, d.getHours(), d.getMinutes());
+  const last = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+  next.setDate(Math.min(d.getDate(), last));
+  return next;
+}
+
+/**
+ * يولّد مسودة فاتورة لكل نموذج متكرر استحق موعده (اليوم أو قبله) ثم يقدّم
+ * موعده التالي. آمن لإعادة التنفيذ: بعد أول توليد يكون الموعد قد تقدم عن
+ * اليوم، فالتشغيل التالي لا يولّد مكررًا.
+ * إن فاتت فترات كاملة (توقف التطبيق) يولّد لكل فترة فائتة — حتى 24 فترة.
+ */
+handlers["recurring.generate_invoices"] = async (payload) => {
+  const onlyId = payload?.recurringId ? String(payload.recurringId) : null;
+  const now = new Date();
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+  const templates = await db.recurringInvoice.findMany({
+    where: { active: true, nextDueDate: { lte: endOfToday }, ...(onlyId ? { id: onlyId } : {}) },
+  });
+
+  const created: { invoiceId: string; invoiceNumber: string; name: string }[] = [];
+
+  for (const t of templates) {
+    let due = new Date(t.nextDueDate);
+    let guard = 0;
+    let made = 0;
+
+    while (due <= endOfToday && guard < 24) {
+      const invoice = await db.invoice.create({
+        data: {
+          companyId: t.companyId,
+          invoiceNumber: await generateNumber("INVOICE"),
+          date: due,
+          dueDate: due,
+          customerId: t.customerId,
+          subtotal: t.amount,
+          taxRate: 0,
+          taxAmount: 0,
+          totalAmount: t.amount,
+          status: "DRAFT",
+          notes: `فاتورة متكررة: ${t.name}`,
+          recurringId: t.id,
+          createdBy: "automation",
+        },
+      });
+      created.push({ invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber, name: t.name });
+      made += 1;
+
+      due = addMonthsClamped(due, RECURRING_MONTHS[t.frequency] ?? 1);
+      guard += 1;
+    }
+
+    await db.recurringInvoice.update({
+      where: { id: t.id },
+      data: { nextDueDate: due, ...(made > 0 ? { lastGeneratedAt: now } : {}) },
+    });
+  }
+
+  if (created.length > 0) {
+    await appendEvent({
+      action: "recurring.invoices_generated",
+      entity: "RecurringInvoice",
+      entityId: onlyId ?? "",
+      actorType: "automation",
+      actor: "rule:recurring.generate_invoices",
+      summary: `توليد ${created.length} فاتورة متكررة: ${created.map((c) => c.invoiceNumber).join("، ")}`,
+      payload: { count: created.length },
+    });
+  }
+
+  return { templates: templates.length, created: created.length, invoices: created };
+};

@@ -15,6 +15,7 @@ import {
 import { etaStatusLabel, invoiceStatusLabel } from "@/components/status-badge";
 import { DocumentForm } from "./document-form";
 import { DocumentRowActions } from "./document-row-actions";
+import { RecurringInvoicesCard } from "./recurring-invoices-card";
 
 export const metadata = { title: "فواتير البيع | دفاتر المحاسب" };
 
@@ -73,6 +74,8 @@ export default async function InvoicesPage() {
         <StatCard label="المحصّل" value={formatMoney(paid)} tone="success" />
         <StatCard label="مستحق على العملاء" value={formatMoney(open)} tone={open > 0 ? "warning" : "default"} />
       </section>
+
+      <RecurringInvoicesCard customers={customers} isAdmin={isAdmin} />
 
       <Card>
         <CardContent className="p-0">

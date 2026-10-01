@@ -24,6 +24,11 @@ export async function register() {
       const { runSchemaMigrations } = await import("@/lib/migrations");
       const { from, to, added } = await runSchemaMigrations();
       if (added > 0) console.log(`[migrations] تحديث المخطط: ${from} → ${to} (${added} تغييرًا)`);
+
+      // القواعد الافتراضية idempotent — تُضيف أي قاعدة جديدة أُضيفت بعد تهيئة القاعدة
+      const { seedDefaultRules } = await import("@/lib/automation/rules");
+      const seeded = await seedDefaultRules();
+      if (seeded > 0) console.log(`[automation] أُضيفت ${seeded} قاعدة أتمتة افتراضية`);
     } catch (e) {
       // خطأ هنا لا يسقط الإقلاع — سيظهر عند أول استخدام ويُعالَج يدويًا
       console.error("[migrations] خطأ في ترحيل المخطط:", e);

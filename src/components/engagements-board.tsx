@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Briefcase, CheckCircle2, Eye, Loader2, Plus, Trash2, UserRound, X, XCircle } from "lucide-react";
+import { Briefcase, CheckCircle2, Eye, Loader2, Plus, RefreshCw, Trash2, UserRound, X, XCircle } from "lucide-react";
 import { apiFetch } from "@/lib/client-api";
 import { ENGAGEMENT_STATUS_LABELS, MEMBER_ROLE_LABELS, MONTHS } from "@/lib/domain";
 import { Button } from "@/components/ui/button";
@@ -106,6 +106,7 @@ interface DetailData {
   status: string;
   notes: string | null;
   dueDate: string | null;
+  clientId: string;
   client: { nameAr: string } | null;
   service: { name: string; slaDays: number };
   members: { name: string; role: string; allocationPct: number }[];
@@ -120,6 +121,7 @@ interface RawDetail {
   status: string;
   notes: string | null;
   dueDate: string | null;
+  clientId: string;
   client: { nameAr: string } | null;
   service: { name: string; slaDays: number };
   members: { role: string; allocationPct: number; user: { name: string } }[];
@@ -205,6 +207,9 @@ export function EngagementsBoard({
   // تفاصيل
   const [detailId, setDetailId] = useState<string | null>(null);
   const [detail, setDetail] = useState<DetailData | null>(null);
+  const [taskBusy, setTaskBusy] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDue, setNewTaskDue] = useState("");
 
   const filtered = rows.filter((r) => !fStatus || r.status === fStatus);
 
@@ -298,6 +303,70 @@ export function EngagementsBoard({
         members: res.data.members.map((m) => ({ name: m.user.name, role: m.role, allocationPct: m.allocationPct })),
       });
     }
+  };
+
+  const reloadDetail = async (id: string) => {
+    const res = await apiFetch<RawDetail>(`/api/engagements/${id}`, { silent: true });
+    if (res.ok && res.data) {
+      setDetail({
+        ...res.data,
+        members: res.data.members.map((m) => ({ name: m.user.name, role: m.role, allocationPct: m.allocationPct })),
+      });
+    }
+  };
+
+  const toggleTask = async (taskId: string, current: string) => {
+    const next = current === "DONE" ? "TODO" : "DONE";
+    const res = await apiFetch(`/api/tasks/${taskId}`, { method: "PUT", body: JSON.stringify({ status: next }), silent: true });
+    if (!res.ok) {
+      toast.error(res.error ?? "تعذّر التحديث");
+      return;
+    }
+    if (detailId) reloadDetail(detailId);
+  };
+
+  const regenChecklist = async () => {
+    if (!detailId) return;
+    setTaskBusy(true);
+    const res = await apiFetch<{ created: number; skipped: number }>(`/api/engagements/${detailId}/checklist`, { method: "POST", silent: true });
+    setTaskBusy(false);
+    if (!res.ok) {
+      toast.error(res.error ?? "تعذّر التوليد");
+      return;
+    }
+    toast.success(res.data?.created ? `أُضيفت ${res.data.created} مهمة من القوالب` : "القائمة مكتملة — لا مهام جديدة من القوالب");
+    await reloadDetail(detailId);
+    await refresh();
+  };
+
+  const addManualTask = async () => {
+    if (!detail || !detailId) return;
+    if (!newTaskTitle.trim()) {
+      toast.error("عنوان المهمة مطلوب");
+      return;
+    }
+    setTaskBusy(true);
+    const res = await apiFetch(`/api/tasks`, {
+      method: "POST",
+      body: JSON.stringify({
+        title: newTaskTitle.trim(),
+        companyId: detail.clientId,
+        engagementId: detailId,
+        dueDate: newTaskDue || undefined,
+        status: "TODO",
+      }),
+      silent: true,
+    });
+    setTaskBusy(false);
+    if (!res.ok) {
+      toast.error(res.error ?? "تعذّرت الإضافة");
+      return;
+    }
+    toast.success("أُضيفت المهمة");
+    setNewTaskTitle("");
+    setNewTaskDue("");
+    await reloadDetail(detailId);
+    await refresh();
   };
 
   const closeEngagement = async (id: string, code: string) => {
@@ -608,19 +677,66 @@ export function EngagementsBoard({
               </div>
 
               <div>
-                <h4 className="mb-2 text-sm font-semibold">المهام المولّدة ({detail.tasks.length})</h4>
-                {detail.tasks.length === 0 && <p className="text-xs text-muted-foreground">لم تولَّد بعد — ستظهر هنا خلال ثوانٍ بعد إنشاء الملف.</p>}
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold">قائمة مهام الملف ({detail.tasks.length})</h4>
+                  <Button size="sm" variant="outline" onClick={regenChecklist} disabled={taskBusy || detail.status === "CLOSED"}>
+                    {taskBusy ? <Loader2 className="animate-spin size-3.5" /> : <RefreshCw className="size-3.5" />}
+                    توليد من القوالب
+                  </Button>
+                </div>
+                {detail.tasks.length > 0 && (
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full rounded-full bg-success transition-all"
+                        style={{ width: `${Math.round((detail.tasks.filter((t) => t.status === "DONE").length / detail.tasks.length) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs tabular text-muted-foreground">
+                      {detail.tasks.filter((t) => t.status === "DONE").length}/{detail.tasks.length} مكتملة
+                    </span>
+                  </div>
+                )}
+                {detail.tasks.length === 0 && <p className="mb-2 text-xs text-muted-foreground">لا مهام بعد — ولّد القائمة من قوالب الخدمة أو أضف مهمة يدويًا.</p>}
                 <div className="flex flex-col gap-1.5">
                   {detail.tasks.map((t) => (
-                    <div key={t.id} className="flex flex-wrap items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                      <span className="min-w-0 flex-1 truncate">{t.title}</span>
+                    <label key={t.id} className="flex cursor-pointer flex-wrap items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-accent/50">
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-emerald-600"
+                        checked={t.status === "DONE"}
+                        disabled={taskBusy || detail.status === "CLOSED"}
+                        onChange={() => toggleTask(t.id, t.status)}
+                      />
+                      <span className={`min-w-0 flex-1 truncate ${t.status === "DONE" ? "text-muted-foreground line-through" : ""}`}>{t.title}</span>
                       {t.autoGenerated && <Badge variant="info">آلي</Badge>}
-                      <span className="text-xs text-muted-foreground">{new Date(t.dueDate).toLocaleDateString("ar-EG")}</span>
+                      <span className="text-xs text-muted-foreground">{t.dueDate ? new Date(t.dueDate).toLocaleDateString("ar-EG") : "—"}</span>
                       {t.assignedToUser && <span className="text-xs text-muted-foreground">{t.assignedToUser.name}</span>}
-                      <Badge variant={t.status === "DONE" ? "success" : t.status === "TODO" ? "secondary" : "warning"}>{t.status}</Badge>
-                    </div>
+                    </label>
                   ))}
                 </div>
+                {detail.status !== "CLOSED" && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Input
+                      className="h-8 flex-1 text-xs"
+                      placeholder="مهمة إضافية…"
+                      value={newTaskTitle}
+                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addManualTask()}
+                    />
+                    <Input
+                      type="date"
+                      className="h-8 w-32 text-xs"
+                      value={newTaskDue}
+                      onChange={(e) => setNewTaskDue(e.target.value)}
+                      dir="ltr"
+                    />
+                    <Button size="sm" variant="outline" onClick={addManualTask} disabled={taskBusy}>
+                      <Plus className="size-3.5" />
+                      إضافة
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {detail.documents.length > 0 && (

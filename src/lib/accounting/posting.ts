@@ -75,6 +75,16 @@ export async function postJournal(input: PostJournalInput) {
   const lines = input.lines.filter((l) => (l.debit ?? 0) !== 0 || (l.credit ?? 0) !== 0);
   if (lines.length < 2) throw new PostingError("القيد يحتاج طرفين على الأقل");
 
+  // قفل الفترة: لا قيد بتاريخ داخل شهر مغلق — يُعاد الفتح من شاشة «إغلاق الشهر»
+  if (input.companyId) {
+    const y = input.date.getFullYear();
+    const m = input.date.getMonth() + 1;
+    const closed = await db.monthClose.findUnique({
+      where: { companyId_year_month: { companyId: input.companyId, year: y, month: m } },
+    });
+    if (closed) throw new PostingError(`الفترة ${m}/${y} مغلقة — أعد فتحها من شاشة إغلاق الشهر قبل الترحيل`);
+  }
+
   const { debit, credit } = assertBalanced(lines);
   const accounts = await resolveAccounts(lines.map((l) => l.accountCode));
 

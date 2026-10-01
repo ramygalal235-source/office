@@ -587,6 +587,16 @@
       "enqueueJob": "eta.poll_statuses",
       "priority": 90,
       "enabled": false
+    },
+    {
+      "code": "recurring.generate_invoices",
+      "name": "توليد الفواتير المتكررة المستحقة",
+      "description": "كل ساعتين: توليد مسودة فاتورة لكل نموذج متكرر مستحق وتقدم موعده التالي",
+      "trigger": "SCHEDULE",
+      "cron": "0 */2 * * *",
+      "enqueueJob": "recurring.generate_invoices",
+      "enabled": true,
+      "priority": 120
     }
   ]
 }
