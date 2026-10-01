@@ -26,7 +26,7 @@ function check(name, cond, detail = "") {
   const b = read("prisma/schema.prisma");
   check("schema/مطابقان نصيًا", a === b);
   const models = [...a.matchAll(/^model (\w+) \{/gm)].map((m) => m[1]);
-  check("schema/43 نموذجًا", models.length === 43, `حصلنا على ${models.length}`);
+  check("schema/44 نموذجًا", models.length === 44, `حصلنا على ${models.length}`);
   globalThis.__models = new Set(models);
 }
 

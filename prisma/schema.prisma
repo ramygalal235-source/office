@@ -94,6 +94,7 @@ model ClientCompany {
 
   // ===== دفاتر الشركة (النطاق المحاسبي) =====
   journalEntries JournalEntry[]
+  bankTransactions BankTransaction[]
   safes          Safe[]
   parties        Party[]
   products       Product[]
@@ -429,8 +430,10 @@ model Safe {
   updatedAt      DateTime @updatedAt
 
   payments Payment[]
+  bankTransactions BankTransaction[]
 
   @@index([type, isActive])
+  @@index([companyId])
 }
 
 model Payment {
@@ -457,6 +460,8 @@ model Payment {
 
   @@index([companyId])
   updatedAt  DateTime @updatedAt
+
+  bankTransactions BankTransaction[]
 
   @@index([type, date])
   @@index([partyId])
@@ -675,6 +680,7 @@ model Payslip {
   overtime     Float      @default(0)
   bonuses      Float      @default(0)
   insurance    Float      @default(0)
+  employerInsurance Float @default(0) // مساهمة صاحب العمل (لبيان التأمينات)
   tax          Float      @default(0)
   otherDeductions Float   @default(0)
   net          Float      @default(0)
@@ -1011,4 +1017,29 @@ model TimeEntry {
 
   @@index([userId, date])
   @@index([engagementId])
+}
+
+// ===== مطابقة البنك =====
+// سطور كشف البنك (تُدخل يدويًا أو تستورد) تُطابَق مع سندات القبض/الصرف
+// على نفس الخزينة البنكية.
+
+model BankTransaction {
+  id             String    @id @default(cuid())
+  companyId      String
+  company        ClientCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  safeId         String
+  safe           Safe      @relation(fields: [safeId], references: [id], onDelete: Cascade)
+  date           DateTime
+  reference      String? // رقم العملية في كشف البنك
+  description    String?
+  amount         Float
+  direction      String    @default("IN") // IN إيداع | OUT سحب
+  status         String    @default("UNMATCHED") // UNMATCHED | MATCHED | IGNORED
+  matchedPaymentId String?
+  matchedPayment Payment?  @relation(fields: [matchedPaymentId], references: [id], onDelete: SetNull)
+  createdAt      DateTime  @default(now())
+
+  @@index([safeId, date])
+  @@index([companyId])
+  @@index([status])
 }

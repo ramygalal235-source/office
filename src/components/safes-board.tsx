@@ -4,9 +4,10 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Landmark, Pencil, Plus, RefreshCw, Trash2, Wallet } from "lucide-react";
+import { ArrowLeftRight, Landmark, Pencil, Plus, RefreshCw, Trash2, Wallet } from "lucide-react";
 import { apiFetch } from "@/lib/client-api";
 import { SAFE_TYPES } from "@/lib/domain";
+import { BankReconDialog } from "@/components/bank-recon-dialog";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +82,7 @@ export function SafesBoard({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [reconSafe, setReconSafe] = useState<BoardSafe | null>(null);
 
   const set = (key: keyof typeof EMPTY_FORM, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -231,6 +233,11 @@ export function SafesBoard({
                 </div>
               </div>
               <div className="flex items-center gap-0.5">
+                {s.type === "BANK" && (
+                  <Button size="icon" variant="ghost" className="size-8" onClick={() => setReconSafe(s)} title="مطابقة البنك">
+                    <ArrowLeftRight className="size-4" />
+                  </Button>
+                )}
                 <Button size="icon" variant="ghost" className="size-8" onClick={() => openEdit(s)} title="تعديل">
                   <Pencil className="size-4" />
                 </Button>
@@ -345,6 +352,17 @@ export function SafesBoard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {reconSafe && (
+        <BankReconDialog
+          safeId={reconSafe.id}
+          safeName={reconSafe.name}
+          open={!!reconSafe}
+          onOpenChange={(v) => {
+            if (!v) setReconSafe(null);
+          }}
+        />
+      )}
     </div>
   );
 }

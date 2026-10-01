@@ -1,3 +1,49 @@
+// ===== الرواتب: شغل شهري (تأمينات + ضريبة دخل + صافي) =====
+import { db } from "@/lib/db";
+import { round2 } from "@/lib/money";
+import { postJournal, PostingError } from "@/lib/accounting/posting";
+import { appendEvent } from "@/lib/automation/event-log";
+
+export type WhtBracket = { upTo: number; rate: number };
+
+export type PayrollParams = {
+  insuranceRate: number; // مساهمة الموظف %
+  employerInsuranceRate: number; // مساهمة صاحب العمل %
+  insuranceCeiling: number; // سقف الاشتراك التأميني
+  whtBrackets: WhtBracket[]; // شرائح ضريبة الدخل الشهرية بالتدرج
+};
+
+/** المعايير المصرية: 11% للموظف / 18% لصاحب العمل، وسقف اشتراك 35,000 */
+const DEFAULT_PARAMS: PayrollParams = {
+  insuranceRate: 11,
+  employerInsuranceRate: 18,
+  insuranceCeiling: 35000,
+  whtBrackets: [
+    { upTo: 15000, rate: 0 },
+    { upTo: 20000, rate: 10 },
+    { upTo: 30000, rate: 15 },
+    { upTo: 50000, rate: 20 },
+    { upTo: 100000, rate: 22.5 },
+    { upTo: Infinity, rate: 25 },
+  ],
+};
+
+const PARAM_KEYS = {
+  insuranceRate: "payroll.insuranceRate",
+  employerInsuranceRate: "payroll.employerInsuranceRate",
+  insuranceCeiling: "payroll.insuranceCeiling",
+  whtBrackets: "payroll.whtBrackets",
+} as const;
+
+// حسابات اليومية المستخدمة في قيد الرواتب
+const PAYROLL_ACCOUNTS = {
+  salariesExpense: "5201", // مصروف: رواتب وأجور
+  salariesPayable: "2110", // مستحق: رواتب وأجور مستحقة
+  salariesPayableFallback: "2109", // بدائل قديمة: أرصدة دائنة أخرى
+  insurancePayable: "2106", // مستحق: التأمينات الاجتماعية
+  whtPayable: "2105", // مستحق: ضريبة الخصم والتحصيل
+};
+
 /** ضريبة الدخل بالتدرج (شهري) على صافي ما بعد التأمين */
 export function computeWht(taxable: number, brackets: WhtBracket[]): number {
   let tax = 0;
@@ -80,6 +126,7 @@ export async function runPayroll(
             overtime: 0,
             bonuses: 0,
             insurance: b.insurance,
+            employerInsurance: b.employerInsurance,
             tax: b.tax,
             otherDeductions: 0,
             net: b.net,

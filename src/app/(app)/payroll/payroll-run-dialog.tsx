@@ -3,7 +3,7 @@
 // ===== شغل الرواتب: إنشاء شغل جديد + أفعال الشغل (عرض/ترحيل/صرف) =====
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Banknote, Eye, FileText, Loader2, MoreHorizontal, Send, Wallet } from "lucide-react";
+import { Banknote, Eye, FileText, Loader2, MoreHorizontal, ReceiptText, Send, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, jsonBody } from "@/lib/client-api";
 import { formatMoney } from "@/lib/money";
@@ -168,6 +168,12 @@ export function RunRowActions({
             <DropdownMenuItem onClick={() => window.open(`/print/payslip/${id}`, "_blank")}>
               <FileText />
               طباعة القسائم
+            </DropdownMenuItem>
+          )}
+          {status === "POSTED" && (
+            <DropdownMenuItem onClick={() => window.open(`/print/payroll-return/${id}`, "_blank")}>
+              <ReceiptText />
+              بيان التأمينات والضريبة
             </DropdownMenuItem>
           )}
           {isAdmin && status === "DRAFT" && (

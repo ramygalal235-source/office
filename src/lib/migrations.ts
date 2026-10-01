@@ -18,6 +18,7 @@ type Migration = {
   columns: ColumnChange[];
   indexes: IndexChange[];
   dropIndexes?: { name: string }[]; // فهارس تُسقط إن وُجدت (تغيير تقييد)
+  sql?: string[]; // إعلانات SQL إضافية (CREATE TABLE IF NOT EXISTS...) — تُنفَّذ عند تطبيق الإصدار
   seed?: () => Promise<void>; // خطوة بيانات idempotent عند تطبيق الإصدار
   note: string;
 };
@@ -90,6 +91,35 @@ const MIGRATIONS: Migration[] = [
     ],
     seed: backfillOfficeCompany,
   },
+  {
+    // الإصدار 7: مساهمة صاحب العمل على القسيمة (لبيان التأمينات) + جدول مطابقة البنك
+    version: 7,
+    note: "employerInsurance على Payslip + جدول BankTransaction",
+    columns: [{ table: "Payslip", column: "employerInsurance", sql: "employerInsurance FLOAT DEFAULT 0" }],
+    indexes: [
+      { table: "BankTransaction", name: "BankTransaction_safeId_date_idx", columns: ["safeId", "date"] },
+      { table: "BankTransaction", name: "BankTransaction_companyId_idx", columns: ["companyId"] },
+      { table: "BankTransaction", name: "BankTransaction_status_idx", columns: ["status"] },
+    ],
+    sql: [
+      `CREATE TABLE IF NOT EXISTS "BankTransaction" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "companyId" TEXT NOT NULL,
+        "safeId" TEXT NOT NULL,
+        "date" DATETIME NOT NULL,
+        "reference" TEXT,
+        "description" TEXT,
+        "amount" FLOAT NOT NULL,
+        "direction" TEXT NOT NULL DEFAULT 'IN',
+        "status" TEXT NOT NULL DEFAULT 'UNMATCHED',
+        "matchedPaymentId" TEXT,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "BankTransaction_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "ClientCompany" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT "BankTransaction_safeId_fkey" FOREIGN KEY ("safeId") REFERENCES "Safe" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT "BankTransaction_matchedPaymentId_fkey" FOREIGN KEY ("matchedPaymentId") REFERENCES "Payment" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+      )`,
+    ],
+  },
 ];
 
 const LATEST_VERSION = MIGRATIONS.reduce((m, x) => Math.max(m, x.version), 1);
@@ -138,6 +168,12 @@ export async function runSchemaMigrations(): Promise<{ from: number; to: number;
     for (const drop of migration.dropIndexes ?? []) {
       if (!(await indexExists(drop.name))) continue;
       await db.$queryRaw({ sql: `DROP INDEX ${drop.name}` });
+      added += 1;
+    }
+
+    // الجداول الجديدة أولًا (CREATE TABLE IF NOT EXISTS) ثم الفهارس فوقها
+    for (const stmt of migration.sql ?? []) {
+      await db.$queryRaw({ sql: stmt });
       added += 1;
     }
 
