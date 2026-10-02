@@ -161,6 +161,14 @@ const MIGRATIONS: Migration[] = [
       )`,
     ],
   },
+  {
+    // الإصدار 9: تصحيح EventLog.seq — autoincrement لا يُقبل على حقل غير id في SQLite
+    // (يُسلسل برمجيا داخل transaction). إن وُجد العمود من نسخة قديمة يُتجاهل.
+    version: 9,
+    note: "EventLog.seq INTEGER DEFAULT 0 (تصحيح autoincrement غير المدعوم)",
+    columns: [{ table: "EventLog", column: "seq", sql: "seq INTEGER DEFAULT 0" }],
+    indexes: [],
+  },
 ];
 
 const LATEST_VERSION = MIGRATIONS.reduce((m, x) => Math.max(m, x.version), 1);

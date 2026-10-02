@@ -379,7 +379,7 @@ export function PaymentsBoard({
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label>مرجع (رقم الشيك/التحويل — اختياري)</Label>
-              <Input value={form.reference} onChange={(e) => set("reference", e.target.value")} dir="ltr" />
+              <Input value={form.reference} onChange={(e) => set("reference", e.target.value)} dir="ltr" />
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label>ملاحظات</Label>

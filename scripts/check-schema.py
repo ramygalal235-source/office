@@ -23,6 +23,9 @@ for name, body in models.items():
         if fname in seen:
             errors.append(f"{name}: حقل مكرر «{fname}»")
         seen.add(fname)
+        # SQLite: autoincrement() لا يُقبل إلا على حقل Int @id (PRIMARY KEY)
+        if "autoincrement()" in raw and not (ftype == "Int" and "@id" in raw):
+            errors.append(f"{name}.{fname}: autoincrement() على حقل غير id — Prisma سيرفضه في SQLite")
         is_list = ftype.endswith("[]")
         base = ftype.rstrip("?").rstrip("[]")
         if base not in models:

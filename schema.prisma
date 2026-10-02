@@ -752,7 +752,7 @@ model Setting {
 
 model EventLog {
   id        String   @id @default(cuid())
-  seq       Int      @default(autoincrement())
+  seq       Int      @default(0) // يتسلسل يدويًا في transaction (SQLite لا يدعم autoincrement خارج id)
   at        DateTime @default(now())
   actor     String   @default("system")
   actorType String   @default("system") // human | automation | system

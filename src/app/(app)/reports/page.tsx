@@ -141,6 +141,7 @@ export default async function ReportsPage() {
                   </>
                 )}
               </Badge>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
