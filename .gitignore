@@ -15,3 +15,7 @@ db/*.db
 db/*.db-journal
 db/uploads/*
 !db/uploads/.gitkeep
+
+# حزم سطح المكتب (نتائج البناء)
+release/
+__pycache__/

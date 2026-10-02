@@ -1,0 +1,56 @@
+// ===== خريطة التنقل الرئيسي =====
+export interface NavItem {
+  href: string;
+  label: string;
+  icon: string;
+  adminOnly?: boolean;
+  /** الشاشة لم تُبنَ بعد — تظهر معطّلة بدل رابط مكسور */
+  disabled?: boolean;
+}
+
+export interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+export const NAV: NavGroup[] = [
+  {
+    title: "الرئيسية",
+    items: [{ href: "/", label: "لوحة التحكم", icon: "LayoutDashboard" }],
+  },
+  {
+    title: "ش المكتب",
+    items: [
+      { href: "/clients", label: "شركات العملاء", icon: "Building2" },
+      { href: "/obligations", label: "الالتزامات الضريبية", icon: "CalendarClock" },
+      { href: "/tasks", label: "المهام المُسندة", icon: "ListTodo" },
+      { href: "/documents", label: "الوثائق والاستخراج", icon: "FileScan" },
+      { href: "/engagements", label: "ملفات العمل", icon: "Briefcase" },
+    ],
+  },
+  {
+    title: "المحاسبة",
+    items: [
+      { href: "/accounts", label: "دليل الحسابات", icon: "BookOpen" },
+      { href: "/parties", label: "العملاء والموردون", icon: "Users" },
+      { href: "/products", label: "المنتجات والمخزون", icon: "Package" },
+      { href: "/invoices", label: "فواتير البيع", icon: "Receipt" },
+      { href: "/purchases", label: "فواتير الشراء", icon: "ShoppingCart" },
+      { href: "/safes", label: "الخزائن والبنوك", icon: "Wallet" },
+      { href: "/payments", label: "التحصيل والدفع", icon: "ArrowLeftRight" },
+      { href: "/journal", label: "قيود اليومية", icon: "ScrollText" },
+      { href: "/assets", label: "الأصول الثابتة", icon: "Boxes" },
+      { href: "/employees", label: "الموظفون", icon: "UserRound" },
+      { href: "/payroll", label: "الرواتب", icon: "Banknote" },
+      { href: "/budgets", label: "الموازنات", icon: "Target" },
+    ],
+  },
+  {
+    title: "التقارير",
+    items: [{ href: "/reports", label: "التقارير المالية", icon: "BarChart3" }],
+  },
+  {
+    title: "الإدارة",
+    items: [{ href: "/settings", label: "الإعدادات", icon: "Settings", adminOnly: true }],
+  },
+];

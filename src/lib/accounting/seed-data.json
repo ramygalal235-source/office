@@ -1,0 +1,602 @@
+{
+  "chartOfAccounts": [
+    {
+      "code": "1",
+      "name": "الأصول",
+      "type": "ASSET",
+      "isGroup": true
+    },
+    {
+      "code": "11",
+      "name": "الأصول المتداولة",
+      "type": "ASSET",
+      "parentCode": "1",
+      "isGroup": true
+    },
+    {
+      "code": "1101",
+      "name": "النقدية بالصندوق",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "1102",
+      "name": "البنوك",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "1103",
+      "name": "العملاء",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "1104",
+      "name": "المخزون",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "1105",
+      "name": "أوراق قبض",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "1106",
+      "name": "عهد وسلف موظفين",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "1107",
+      "name": "أرصدة مدينة أخرى",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "1108",
+      "name": "ضريبة القيمة المضافة (مدخلات)",
+      "type": "ASSET",
+      "parentCode": "11",
+      "isGroup": false
+    },
+    {
+      "code": "12",
+      "name": "الأصول غير المتداولة (الثابتة)",
+      "type": "ASSET",
+      "parentCode": "1",
+      "isGroup": true
+    },
+    {
+      "code": "1201",
+      "name": "الأراضي والمباني",
+      "type": "ASSET",
+      "parentCode": "12",
+      "isGroup": false
+    },
+    {
+      "code": "1202",
+      "name": "الآلات والمعدات",
+      "type": "ASSET",
+      "parentCode": "12",
+      "isGroup": false
+    },
+    {
+      "code": "1203",
+      "name": "السيارات ووسائل النقل",
+      "type": "ASSET",
+      "parentCode": "12",
+      "isGroup": false
+    },
+    {
+      "code": "1204",
+      "name": "أثاث ومعدات مكاتب",
+      "type": "ASSET",
+      "parentCode": "12",
+      "isGroup": false
+    },
+    {
+      "code": "1205",
+      "name": "أجهزة كمبيوتر وإلكترونيات",
+      "type": "ASSET",
+      "parentCode": "12",
+      "isGroup": false
+    },
+    {
+      "code": "1299",
+      "name": "مجمع إهلاك الأصول الثابتة",
+      "type": "ASSET",
+      "parentCode": "12",
+      "isGroup": false
+    },
+    {
+      "code": "2",
+      "name": "الالتزامات",
+      "type": "LIABILITY",
+      "isGroup": true
+    },
+    {
+      "code": "21",
+      "name": "الالتزامات المتداولة",
+      "type": "LIABILITY",
+      "parentCode": "2",
+      "isGroup": true
+    },
+    {
+      "code": "2101",
+      "name": "الموردون",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2102",
+      "name": "أوراق دفع",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2103",
+      "name": "ضريبة القيمة المضافة المستحقة",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2104",
+      "name": "ضريبة كسب العمل المستحقة",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2105",
+      "name": "ضريبة الخصم والتحصيل",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2106",
+      "name": "التأمينات الاجتماعية المستحقة",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2107",
+      "name": "مصروفات مستحقة",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2108",
+      "name": "إيرادات مقدمة",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2109",
+      "name": "أرصدة دائنة أخرى",
+      "type": "LIABILITY",
+      "parentCode": "21",
+      "isGroup": false
+    },
+    {
+      "code": "2110",
+      "parentCode": "21",
+      "name": "رواتب وأجور مستحقة",
+      "type": "LIABILITY",
+      "isGroup": false
+    },
+    {
+      "code": "3",
+      "name": "حقوق الملكية",
+      "type": "EQUITY",
+      "isGroup": true
+    },
+    {
+      "code": "3101",
+      "name": "رأس المال",
+      "type": "EQUITY",
+      "parentCode": "3",
+      "isGroup": false
+    },
+    {
+      "code": "3102",
+      "name": "جاري الشركاء / صاحب العمل",
+      "type": "EQUITY",
+      "parentCode": "3",
+      "isGroup": false
+    },
+    {
+      "code": "3103",
+      "name": "أرباح / خسائر مرحلة",
+      "type": "EQUITY",
+      "parentCode": "3",
+      "isGroup": false
+    },
+    {
+      "code": "3104",
+      "name": "أرباح العام الحالي",
+      "type": "EQUITY",
+      "parentCode": "3",
+      "isGroup": false
+    },
+    {
+      "code": "3105",
+      "name": "احتياطيات",
+      "type": "EQUITY",
+      "parentCode": "3",
+      "isGroup": false
+    },
+    {
+      "code": "4",
+      "name": "الإيرادات",
+      "type": "INCOME",
+      "isGroup": true
+    },
+    {
+      "code": "4101",
+      "name": "إيرادات المبيعات / الخدمات",
+      "type": "INCOME",
+      "parentCode": "4",
+      "isGroup": false
+    },
+    {
+      "code": "4102",
+      "name": "مردودات ومسموحات المبيعات",
+      "type": "INCOME",
+      "parentCode": "4",
+      "isGroup": false
+    },
+    {
+      "code": "4103",
+      "name": "خصم مسموح به",
+      "type": "INCOME",
+      "parentCode": "4",
+      "isGroup": false
+    },
+    {
+      "code": "4201",
+      "name": "إيرادات أخرى",
+      "type": "INCOME",
+      "parentCode": "4",
+      "isGroup": false
+    },
+    {
+      "code": "5",
+      "name": "المصروفات والتكاليف",
+      "type": "EXPENSE",
+      "isGroup": true
+    },
+    {
+      "code": "5101",
+      "name": "تكلفة البضاعة المباعة / تكلفة النشاط",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5201",
+      "name": "رواتب وأجور",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5202",
+      "name": "إيجار مقر",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5203",
+      "name": "كهرباء ومياه وإنترنت",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5204",
+      "name": "إهلاك أصول ثابتة",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5205",
+      "name": "أدوات مكتبية ومطبوعات",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5206",
+      "name": "صيانة وإصلاحات",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5207",
+      "name": "دعاية وإعلان وتسويق",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5208",
+      "name": "عمولات ورسوم بنكية",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5209",
+      "name": "مصروفات انتقال وضيافة",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5210",
+      "name": "ضرائب ورسوم حكومية",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    },
+    {
+      "code": "5299",
+      "name": "مصروفات إدارية وعمومية أخرى",
+      "type": "EXPENSE",
+      "parentCode": "5",
+      "isGroup": false
+    }
+  ],
+  "expenseCategories": [
+    {
+      "name": "رواتب وأجور",
+      "code": "EXP-SAL"
+    },
+    {
+      "name": "إيجار مقرات",
+      "code": "EXP-RENT"
+    },
+    {
+      "name": "كهرباء ومياه وغاز",
+      "code": "EXP-UTIL"
+    },
+    {
+      "name": "إنترنت واتصالات",
+      "code": "EXP-COMM"
+    },
+    {
+      "name": "أدوات مكتبية ومطبوعات",
+      "code": "EXP-STAT"
+    },
+    {
+      "name": "صيانة ونظافة",
+      "code": "EXP-MAINT"
+    },
+    {
+      "name": "دعاية وإعلان",
+      "code": "EXP-ADV"
+    },
+    {
+      "name": "رسوم وبنوك",
+      "code": "EXP-BANK"
+    },
+    {
+      "name": "انتقالات وسفر",
+      "code": "EXP-TRAV"
+    },
+    {
+      "name": "ضرائب ورخص وتأمينات",
+      "code": "EXP-GOV"
+    },
+    {
+      "name": "أخرى",
+      "code": "EXP-OTHER"
+    }
+  ],
+  "sequences": [
+    {
+      "type": "INVOICE",
+      "prefix": "INV-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "PURCHASE",
+      "prefix": "PUR-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "JOURNAL",
+      "prefix": "JV-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "PAYMENT_IN",
+      "prefix": "RV-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "PAYMENT_OUT",
+      "prefix": "PV-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "TASK",
+      "prefix": "TSK-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "RECEIPT",
+      "prefix": "RV-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "PARTY",
+      "prefix": "PTY-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "PRODUCT",
+      "prefix": "PRD-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "SAFE",
+      "prefix": "SAF-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "EMPLOYEE",
+      "prefix": "EMP-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "ASSET",
+      "prefix": "AST-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "BUDGET",
+      "prefix": "BDG-",
+      "nextNumber": 1,
+      "padding": 5
+    },
+    {
+      "type": "ENGAGEMENT",
+      "prefix": "ENG-",
+      "nextNumber": 1,
+      "padding": 5
+    }
+  ],
+  "automationRules": [
+    {
+      "code": "obligation.prepare_tasks",
+      "name": "توليد مهمة تحضير لكل التزام ضريبي",
+      "description": "عند تسجيل التزام جديد، تُنشأ مهمة التجهيز قبل موعده بأسبوعين.",
+      "trigger": "EVENT",
+      "eventType": "obligation.created",
+      "cron": null,
+      "enqueueJob": "obligation.prepare_tasks",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "code": "engagement.checklist",
+      "name": "توليد قائمة مهام ملف العمل",
+      "description": "عند إنشاء ملف عمل، تُولّد مهامه من قوالب الخدمة.",
+      "trigger": "EVENT",
+      "eventType": "engagement.created",
+      "cron": null,
+      "enqueueJob": "engagement.generate_checklist",
+      "priority": 50,
+      "enabled": true
+    },
+    {
+      "code": "scan.sla_breaches",
+      "name": "فحص المهام المتأخرة",
+      "description": "تنبيه لكل مهمة تجاوزت موعد إنجازها.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "*/15 * * * *",
+      "enqueueJob": "sla.scan_breaches",
+      "priority": 100,
+      "enabled": true
+    },
+    {
+      "code": "scan.deadlines",
+      "name": "فحص الاستحقاقات القادمة",
+      "description": "تنبيه قبل كل استحقاق ضريبي بأسبوع.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "*/30 * * * *",
+      "enqueueJob": "deadline.scan_upcoming",
+      "priority": 100,
+      "enabled": true
+    },
+    {
+      "code": "ledger.trial_balance",
+      "name": "فحص توازن ميزان المراجعة",
+      "description": "ينبّه المدير إن أصبحت الميزانية غير متوازنة.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "0 * * * *",
+      "enqueueJob": "ledger.verify_trial_balance",
+      "priority": 120,
+      "enabled": true
+    },
+    {
+      "code": "audit.chain",
+      "name": "فحص سلامة سجل الأحداث",
+      "description": "يكشف أي عبث بسجل الأحداث عبر سلسلة التجزئة.",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "0 2 * * *",
+      "enqueueJob": "audit.verify_chain",
+      "priority": 120,
+      "enabled": true
+    },
+    {
+      "code": "eta.auto_submit",
+      "name": "إرسال الفاتورة للهيئة تلقائيًا",
+      "description": "عند ترحيل فاتورة بيع، تُرسل إلى هيئة الضرائب (ETA) بصيغة 0.9. تُفعَّل بعد ضبط بيانات العميل في الإعدادات.",
+      "trigger": "EVENT",
+      "eventType": "invoice.posted",
+      "cron": null,
+      "enqueueJob": "eta.submit_invoice",
+      "priority": 80,
+      "enabled": false
+    },
+    {
+      "code": "eta.poll_statuses",
+      "name": "متابعة حالة فواتير الهيئة",
+      "description": "كل 10 دقائق: تحديث حالة الفواتير المرسلة إلى هيئة الضرائب من «قيد التحقق» إلى «مقبولة» أو «مرفوضة».",
+      "trigger": "SCHEDULE",
+      "eventType": null,
+      "cron": "*/10 * * * *",
+      "enqueueJob": "eta.poll_statuses",
+      "priority": 90,
+      "enabled": false
+    },
+    {
+      "code": "recurring.generate_invoices",
+      "name": "توليد الفواتير المتكررة المستحقة",
+      "description": "كل ساعتين: توليد مسودة فاتورة لكل نموذج متكرر مستحق وتقدم موعده التالي",
+      "trigger": "SCHEDULE",
+      "cron": "0 */2 * * *",
+      "enqueueJob": "recurring.generate_invoices",
+      "enabled": true,
+      "priority": 120
+    }
+  ]
+}
