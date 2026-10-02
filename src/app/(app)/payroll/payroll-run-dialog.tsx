@@ -7,7 +7,6 @@ import { Banknote, Eye, FileText, Loader2, MoreHorizontal, ReceiptText, Send, Wa
 import { toast } from "sonner";
 import { apiFetch, jsonBody } from "@/lib/client-api";
 import { formatMoney } from "@/lib/money";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,

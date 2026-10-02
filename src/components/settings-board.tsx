@@ -2,7 +2,7 @@
 
 // ===== شاشة الإعدادات: المكتب، المستخدمون، الأمان، الذكاء المستندي،
 // النسخ الاحتياطي، وحالة النظام =====
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,

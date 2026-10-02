@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { requireCompanyId } from "@/lib/company-context";
 import { auditLog, fail, generateNumber, handleDbError, ok, parsePagination } from "@/lib/accounting/api";
-import { computePayslip, getPayrollParams } from "@/lib/payroll";
 
 /** قائمة الموظفين */
 export async function GET(req: NextRequest) {

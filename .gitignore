@@ -18,3 +18,4 @@ db/uploads/*
 
 # حزم سطح المكتب (نتائج البناء)
 release/
+__pycache__/

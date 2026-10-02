@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireCompanyId } from "@/lib/company-context";
 import { fail, handleDbError, ok } from "@/lib/accounting/api";
-import { firstIssue, optDate, optNum, optText, reqDate } from "@/lib/validators";
+import { firstIssue, optNum, optText, reqDate } from "@/lib/validators";
 import { getHandler } from "@/lib/automation/handlers";
 import { round2 } from "@/lib/money";
 

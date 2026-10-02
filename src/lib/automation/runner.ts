@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { getHandler, registeredJobTypes } from "./handlers";
-import { appendEvent } from "./event-log";
 import { claim, complete, fail, requeueStale } from "./queue";
 import { runDueSchedules } from "./rules";
 
