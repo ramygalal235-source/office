@@ -7,7 +7,7 @@ import { DOCUMENT_TYPES } from "@/lib/domain";
 import { readUpload } from "@/lib/storage";
 import { record } from "@/lib/automation/event-log";
 import { buildExtractionPrompt, parseOcrResponse, type OcrField } from "./prompt";
-import { getOcrSettings, isOcrAvailable, visionComplete } from "./engine";
+import { getOcrSettings, isOcrAvailable, visionComplete, type OcrSettings } from "./engine";
 
 const IMAGE_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/bmp"]);
 
@@ -126,9 +126,10 @@ export async function runExtraction(
 }
 
 // كاش مؤقت حتى لا يضرب كل استطلاع للواجهة مزودًا سحابيًا على كل طلب
-let statusCache: { at: number; value: ReturnType<typeof buildOcrStatus> } | null = null;
+type OcrStatusValue = Awaited<ReturnType<typeof buildOcrStatus>>;
+let statusCache: { at: number; value: OcrStatusValue } | null = null;
 
-async function buildOcrStatus(settings: { provider: string; model: string; baseUrl: string; apiKey: string }) {
+async function buildOcrStatus(settings: OcrSettings) {
   const available =
     settings.provider === "ollama" ? await isOcrAvailable(settings) : settings.apiKey ? await isOcrAvailable(settings) : null;
   return {

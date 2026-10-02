@@ -16,7 +16,7 @@ import {
   ScanText,
   ServerCog,
   ShieldCheck,
-  TestDiag,
+  Stethoscope,
   Upload,
   UserPlus,
   Users,
@@ -587,7 +587,7 @@ export function SettingsBoard({
                     etaTest.ok ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200" : "border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
                   }`}
                 >
-                  <TestDiag className="mt-0.5 size-4 shrink-0" />
+                  <Stethoscope className="mt-0.5 size-4 shrink-0" />
                   <p>{etaTest.message}</p>
                 </div>
               )}

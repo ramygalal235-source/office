@@ -4,7 +4,7 @@
 // + سجل DepreciationEntry فريد لكل فترة (idempotent — لا يُكرر الإهلاك).
 import { db } from "@/lib/db";
 import { round2 } from "@/lib/money";
-import { postJournal, PostingError } from "@/lib/accounting/posting";
+import { postJournal, PostingError, type PostingLine } from "@/lib/accounting/posting";
 import { appendEvent } from "@/lib/automation/event-log";
 
 export const ASSET_ACCOUNTS = {
@@ -237,7 +237,7 @@ export async function disposeAsset(
     const safeAccount = await db.account.findUnique({ where: { id: safe.accountId } });
     if (!asset.account) throw new PostingError("الأصل غير مرتبط بحساب — لا يمكن قيده");
 
-    const lines = [
+    const lines: PostingLine[] = [
       { accountCode: ASSET_ACCOUNTS.accumulatedDepreciation, debit: asset.accumulatedDepreciation },
       { accountCode: safeAccount!.code, debit: proceeds, description: `بيع ${asset.name}` },
       { accountCode: asset.account.code, credit: asset.cost },
@@ -278,7 +278,7 @@ export async function disposeAsset(
 
   // إتلاف بلا بيع: القيمة الدفترية كلها خسارة
   if (asset.account) {
-    const lines = [
+    const lines: PostingLine[] = [
       { accountCode: ASSET_ACCOUNTS.accumulatedDepreciation, debit: asset.accumulatedDepreciation },
       { accountCode: asset.account.code, credit: asset.cost },
     ];

@@ -66,7 +66,7 @@ export function optEnum(values: readonly string[], fallback: string) {
     .transform((v) => (v && values.includes(v) ? v : fallback));
 }
 
-/** استخراج أول رسالة خطأ من نتيجة zod */
-export function firstIssue(error: z.ZodError): string {
+/** استخراج أول رسالة خطأ من نتيجة zod (يعمل مع ZodError و ZodSafeParseError في zod v4) */
+export function firstIssue(error: { issues?: ReadonlyArray<{ message: string }> }): string {
   return error.issues?.[0]?.message || "بيانات غير صحيحة";
 }

@@ -7,6 +7,7 @@
 // القاعدة: كل ترحيل مُرقَّم، فاحص وجوده يسبق تطبيقه، والتطبيق كله idempotent —
 // أي إعادة إقلاع لا تُكرر شيئًا. لا نستخدم prisma migrate لأن الحزمة
 // النهائية بلا اتصال ولا ملف migrات — فقط المخطط الحالي.
+import { sql } from "@prisma/client";
 import { db } from "@/lib/db";
 import { backfillOfficeCompany } from "@/lib/company-context";
 
@@ -174,16 +175,12 @@ const MIGRATIONS: Migration[] = [
 const LATEST_VERSION = MIGRATIONS.reduce((m, x) => Math.max(m, x.version), 1);
 
 async function tableColumns(table: string): Promise<Set<string>> {
-  const rows = (await db.$queryRaw({
-    sql: `SELECT name FROM pragma_table_info('${table}')`,
-  })) as { name: string }[];
+  const rows = (await db.$queryRaw`SELECT name FROM pragma_table_info(${table})`) as { name: string }[];
   return new Set(rows.map((r) => r.name));
 }
 
 async function indexExists(indexName: string): Promise<boolean> {
-  const rows = (await db.$queryRaw({
-    sql: `SELECT name FROM sqlite_master WHERE type = 'index' AND name = ${JSON.stringify(indexName)}`,
-  })) as { name: string }[];
+  const rows = (await db.$queryRaw`SELECT name FROM sqlite_master WHERE type = 'index' AND name = ${indexName}`) as { name: string }[];
   return rows.length > 0;
 }
 
@@ -208,30 +205,26 @@ export async function runSchemaMigrations(): Promise<{ from: number; to: number;
     for (const change of migration.columns) {
       const cols = await tableColumns(change.table);
       if (cols.has(change.column)) continue;
-      await db.$queryRaw({
-        sql: `ALTER TABLE ${change.table} ADD COLUMN ${change.sql}`,
-      });
+      await db.$executeRaw(sql`ALTER TABLE ${sql.raw(change.table)} ADD COLUMN ${sql.raw(change.sql)}`);
       added += 1;
     }
 
     for (const drop of migration.dropIndexes ?? []) {
       if (!(await indexExists(drop.name))) continue;
-      await db.$queryRaw({ sql: `DROP INDEX ${drop.name}` });
+      await db.$executeRaw(sql`DROP INDEX ${sql.raw(drop.name)}`);
       added += 1;
     }
 
     // الجداول الجديدة أولًا (CREATE TABLE IF NOT EXISTS) ثم الفهارس فوقها
     for (const stmt of migration.sql ?? []) {
-      await db.$queryRaw({ sql: stmt });
+      await db.$executeRaw(sql.raw(stmt));
       added += 1;
     }
 
     for (const idx of migration.indexes) {
       if (await indexExists(idx.name)) continue;
       const unique = idx.unique ?? idx.name.endsWith("_unique") ? "UNIQUE " : "";
-      await db.$queryRaw({
-        sql: `CREATE ${unique}INDEX IF NOT EXISTS ${idx.name} ON ${idx.table} (${idx.columns.join(", ")})`,
-      });
+      await db.$executeRaw(sql`CREATE ${sql.raw(unique)}INDEX IF NOT EXISTS ${sql.raw(idx.name)} ON ${sql.raw(idx.table)} (${sql.raw(idx.columns.join(", "))})`);
       added += 1;
     }
 
@@ -240,6 +233,6 @@ export async function runSchemaMigrations(): Promise<{ from: number; to: number;
     }
   }
 
-  await db.$queryRaw({ sql: `PRAGMA user_version = ${LATEST_VERSION}` });
+  await db.$executeRaw(sql.raw(`PRAGMA user_version = ${LATEST_VERSION}`));
   return { from: current, to: LATEST_VERSION, added };
 }

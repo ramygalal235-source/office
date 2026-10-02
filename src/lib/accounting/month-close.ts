@@ -115,7 +115,7 @@ export async function closeMonth(companyId: string, year: number, month: number,
   const existing = await db.monthClose.findUnique({
     where: { companyId_year_month: { companyId, year, month } },
   });
-  if (existing) return { skipped: true, existing };
+  if (existing) return { skipped: true as const, existing };
 
   const checks = await runMonthCloseChecks(companyId, year, month);
   const failed = checks.filter((c) => c.blocking && !c.ok);
@@ -132,7 +132,7 @@ export async function closeMonth(companyId: string, year: number, month: number,
       checks: JSON.stringify(checks.map((c) => ({ key: c.key, ok: c.ok, detail: c.detail }))),
     },
   });
-  return { skipped: false, record, checks };
+  return { skipped: false as const, record, checks };
 }
 
 /** إعادة فتح فترة مغلقة */

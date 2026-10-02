@@ -9,9 +9,11 @@ export async function GET() {
     const companyId = await requireCompanyId();
     const budgets = await db.budget.findMany({
       where: { companyId },
-      include: { lines: { include: { account: { select: { code: true, name: true } }, orderBy: { periodMonth: "asc" } } } },
+      include: { lines: { include: { account: { select: { code: true, name: true } } } } },
       orderBy: [{ fiscalYear: "desc" }, { createdAt: "desc" }],
     });
+    // نرتّب أسطر كل موازنة حسب الشهر (لا يدعم include المتداخل orderBy في هذا الإصدار)
+    for (const b of budgets) b.lines.sort((a, z) => (a.periodMonth ?? 0) - (z.periodMonth ?? 0));
     return ok(budgets);
   } catch (e) {
     return handleDbError(e);

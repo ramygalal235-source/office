@@ -12,8 +12,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const body = (await req.json().catch(() => null)) as { safeId?: string } | null;
   if (!body?.safeId) return fail("اختر الخزينة/البنك المصروف منها", 400);
   try {
-    const result = await payPayrollRun(id, body.safeId, admin);
-    await auditLog("PAY", "PayrollRun", id, `صرف رواتب: ${result.journalNumber}`, admin);
+    const result = await payPayrollRun(id, body.safeId, admin.username);
+    await auditLog("PAY", "PayrollRun", id, `صرف رواتب: ${result.journalNumber}`, admin.username);
     return ok(result, { ok: result.ok });
   } catch (e) {
     return handleDbError(e);

@@ -91,9 +91,14 @@ export async function POST(req: NextRequest) {
     if (!service) return fail("نوع خدمة غير موجود", 404);
 
     const month = d.periodMonth ?? null;
-    const existing = await db.engagement.findUnique({
-      where: { clientId_serviceId_periodYear_periodMonth: { clientId: d.clientId, serviceId: d.serviceId, periodYear: d.periodYear, periodMonth: month } },
-    });
+    const existing =
+      month === null
+        ? await db.engagement.findFirst({
+            where: { clientId: d.clientId, serviceId: d.serviceId, periodYear: d.periodYear, periodMonth: null },
+          })
+        : await db.engagement.findUnique({
+            where: { clientId_serviceId_periodYear_periodMonth: { clientId: d.clientId, serviceId: d.serviceId, periodYear: d.periodYear, periodMonth: month } },
+          });
     if (existing) return fail(`يوجد ملف عمل بالفعل لنفس العميل والخدمة والفترة: ${existing.code}`, 409);
 
     // موعد الاستحقاق الافتراضي: بداية الفترة + مدة الخدمة (SLA)

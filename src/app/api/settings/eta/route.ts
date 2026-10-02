@@ -5,6 +5,7 @@ import {
   saveEtaSettings,
   testEtaConnection,
   type EtaEnvironment,
+  type EtaSettings,
 } from "@/lib/eta/client";
 
 function maskSecret(secret: string): string {
@@ -46,7 +47,7 @@ export async function PUT(req: NextRequest) {
   } | null;
   if (!body) return fail("بدن الطلب غير صالح", 400);
 
-  const patch: Record<string, string> = {};
+  const patch: Partial<EtaSettings> = {};
   const str = (v: unknown, max: number) => (v === undefined ? undefined : String(v).trim().slice(0, max));
   if (body.environment !== undefined) {
     if (body.environment !== "test" && body.environment !== "prod") return fail("بيئة غير معروفة", 400);
@@ -78,7 +79,7 @@ export async function PUT(req: NextRequest) {
       ...(unitType !== undefined ? { unitType } : {}),
       ...(serviceCode !== undefined ? { serviceCode } : {}),
     });
-    await auditLog("UPDATE", "Setting", "eta", "تحديث إعدادات الفوترة الإلكترونية (ETA)", admin);
+    await auditLog("UPDATE", "Setting", "eta", "تحديث إعدادات الفوترة الإلكترونية (ETA)", admin.username);
     const saved = await getEtaSettings();
     return ok({ ...saved, clientSecret: maskSecret(saved.clientSecret), hasSecret: saved.clientSecret.length > 0 });
   } catch (e) {
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
   if (!admin) return fail("صلاحية المدير مطلوبة", 403);
   try {
     const result = await testEtaConnection();
-    await auditLog("UPDATE", "Setting", "eta", `اختبار اتصال هيئة الضرائب: ${result.ok ? "نجح" : "فشل"}`, admin);
+    await auditLog("UPDATE", "Setting", "eta", `اختبار اتصال هيئة الضرائب: ${result.ok ? "نجح" : "فشل"}`, admin.username);
     return ok(result);
   } catch (e) {
     return handleDbError(e);

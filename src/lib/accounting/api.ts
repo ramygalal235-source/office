@@ -62,14 +62,7 @@ export async function auditLog(action: string, entity: string, entityId: string,
 
 export function getSessionUser(req: NextRequest): SessionUser | null {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
-  const payload = verifySessionToken(token);
-  if (!payload) return null;
-  return {
-    uid: payload.uid,
-    username: payload.username,
-    name: payload.name,
-    role: payload.role,
-  };
+  return verifySessionToken(token);
 }
 
 export function requireAdmin(req: NextRequest): SessionUser | null {

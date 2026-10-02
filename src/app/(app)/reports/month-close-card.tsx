@@ -49,7 +49,7 @@ export function MonthCloseCard({ userRole }: { userRole: string }) {
 
   const close = async () => {
     setBusy(true);
-    const res = await apiFetch(`/api/month-close`, {
+    const res = await apiFetch<{ skipped?: boolean }>(`/api/month-close`, {
       method: "POST",
       ...jsonBody({ year: Number(year), month: Number(month) }),
       silent: true,

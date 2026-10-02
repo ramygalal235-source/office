@@ -32,7 +32,7 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
         dueDate={invoice.dueDate}
         partyLabel="العميل"
         partyName={invoice.customer?.name}
-        company={invoice.company?.name}
+        company={invoice.company?.nameAr ?? invoice.company?.nameEn ?? null}
         lines={invoice.items.map((l) => ({
           description: l.description,
           quantity: l.quantity,

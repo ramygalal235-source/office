@@ -69,7 +69,7 @@ async function TrialSection({ from, to, companyId }: { from: Date; to: Date; com
   const trial = await getTrialBalance({ from, to }, companyId);
   return (
     <section>
-      <h2>{TITLES.trial} {trial.balanced ? "— متوازن" : `— فرق ${formatMoney(trial.balanced)}`}</h2>
+      <h2>{TITLES.trial} {trial.balanced ? "— متوازن" : `— فرق ${formatMoney(Math.abs(trial.totalDebit - trial.totalCredit))}`}</h2>
       <table>
         <thead>
           <tr>

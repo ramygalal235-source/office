@@ -6,13 +6,13 @@ import { fail, handleDbError, ok } from "@/lib/accounting/api";
 import { firstIssue, optNum, optText, reqDate, reqText } from "@/lib/validators";
 import { round2 } from "@/lib/money";
 
-const FREQS = ["MONTHLY", "QUARTERLY", "ANNUALLY"];
+const FREQS = ["MONTHLY", "QUARTERLY", "ANNUALLY"] as const;
 
 const createSchema = z.object({
   name: reqText(200, "اسم النموذج مطلوب"),
   customerId: optText(30),
   amount: optNum().refine((n) => n > 0, "المبلغ يجب أن يكون أكبر من صفر"),
-  frequency: z.enum(FREQS as const).default("MONTHLY"),
+  frequency: z.enum(FREQS).default("MONTHLY"),
   nextDueDate: reqDate(),
   notes: optText(1000),
 });

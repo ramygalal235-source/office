@@ -75,15 +75,17 @@ const ETA_LABELS: Record<string, string> = {
 
 export async function saveEtaSettings(patch: Partial<EtaSettings>): Promise<EtaSettings> {
   await db.$transaction(
-    ETA_SETTING_KEYS.map((k) => {
+    ETA_SETTING_KEYS.flatMap((k) => {
       const v = patch[k];
-      if (v === undefined) return null;
-      return db.setting.upsert({
-        where: { key: `eta.${k}` },
-        update: { value: String(v) },
-        create: { key: `eta.${k}`, value: String(v), group: "eta", label: ETA_LABELS[k] },
-      });
-    }).filter(Boolean)
+      if (v === undefined) return [];
+      return [
+        db.setting.upsert({
+          where: { key: `eta.${k}` },
+          update: { value: String(v) },
+          create: { key: `eta.${k}`, value: String(v), group: "eta", label: ETA_LABELS[k] },
+        }),
+      ];
+    })
   );
   return getEtaSettings();
 }

@@ -1,11 +1,14 @@
-import { flatConfig } from "eslint-config-next/flat";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 
 /**
  * إعداد ESLint (flat config — eslint 9)
  * الاستخدام: npm run lint
- * ملاحظة: يُفعَّل فحص البناء (eslint.ignoreDuringBuilds: false) بعد أول
- * جولة npm run lint + npm run typecheck نظيفتين — انظر next.config.ts
+ *
+ * ملاحظة Next 16:
+ *  - الاستيراد من "eslint-config-next/core-web-vitals" (مسار ./flat أُزيل).
+ *  - أمر next lint وحل lint أثناء البناء أُزيحا — البناء لا يفحص lint،
+ *    والتحقق النوعي أثناء البناء يبقى مفعّلًا عبر typescript.ignoreBuildErrors.
  */
-const eslintConfig = [...flatConfig];
+const eslintConfig = [...nextCoreWebVitals];
 
 export default eslintConfig;

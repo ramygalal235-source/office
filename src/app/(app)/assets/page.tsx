@@ -20,7 +20,7 @@ export const metadata = { title: "الأصول الثابتة | دفاتر ال�
 export default async function AssetsPage() {
   const session = await getSession();
   const companyId = await requireCompanyId();
-  const [assets, accounts, safes] = await Promise.all([
+  const [assets, safes, accounts] = await Promise.all([
     db.fixedAsset.findMany({
       where: { companyId },
       include: { account: { select: { code: true, name: true } } },

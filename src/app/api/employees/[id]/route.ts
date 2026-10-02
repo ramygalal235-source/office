@@ -49,7 +49,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
       return ok({ deactivated: true, message: "الموظف مرتبط بكشوف رواتب — أُوقف بدل الحذف" });
     }
     const emp = await db.employee.delete({ where: { id } });
-    await auditLog("DELETE", "Employee", id, `حذف موظف: ${emp.name}`, admin);
+    await auditLog("DELETE", "Employee", id, `حذف موظف: ${emp.name}`, admin.username);
     return ok({ deleted: true });
   } catch (e) {
     return handleDbError(e);

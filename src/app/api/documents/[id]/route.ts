@@ -46,7 +46,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       action: "document.deleted",
       entity: "DmsDocument",
       summary: `حذف وثيقة: ${doc.title} (${doc.checksum.slice(0, 12)})`,
-      actorType: "user",
+      actorType: "human",
       actor: user.username,
     });
     return ok({ id });

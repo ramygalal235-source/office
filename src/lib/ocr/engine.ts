@@ -40,8 +40,8 @@ export async function getOcrSettings(overrides?: { provider?: string; model?: st
 
   const provider = asProviderId(overrides?.provider ?? envProvider ?? (dbValue("ocr.provider") || undefined));
   const preset = PRESETS[provider] ?? PRESETS.ollama;
-  const baseUrl = (provider === "custom" ? envBaseUrl ?? dbValue("ocr.baseUrl") : envBaseUrl ?? dbValue(`ocr.baseUrl.${provider}`) || preset.baseUrl) || preset.baseUrl;
-  const model = overrides?.model ?? envModel ?? dbValue("ocr.model") || preset.model;
+  const baseUrl = (provider === "custom" ? envBaseUrl ?? dbValue("ocr.baseUrl") : (envBaseUrl ?? dbValue(`ocr.baseUrl.${provider}`)) || preset.baseUrl) || preset.baseUrl;
+  const model = (overrides?.model ?? envModel ?? dbValue("ocr.model")) || preset.model;
   const apiKey = provider === "ollama" ? "" : envApiKey ?? dbValue("ocr.apiKey") ?? "";
 
   return { provider, model, baseUrl, apiKey };

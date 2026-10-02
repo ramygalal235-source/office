@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const buf = await readUpload(v.storagePath);
     const inline = INLINE_MIME.has(doc.mimeType);
-    return new Response(buf, {
+    return new Response(new Uint8Array(buf), {
       headers: {
         "Content-Type": doc.mimeType,
         "Content-Length": String(buf.length),

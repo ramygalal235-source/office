@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       action: "document.re_extract_queued",
       entity: "DmsDocument",
       entityId: id,
-      actorType: "user",
+      actorType: "human",
       actor: user?.username ?? "unknown",
       summary: `إعادة استخراج «${doc.title}»${provider ? ` بمزوّد ${provider}` : ""}${model ? ` بالنموذج ${model}` : ""}`,
       payload: { jobId: job.id, provider: provider ?? null, model: model ?? null },

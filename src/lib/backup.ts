@@ -51,11 +51,13 @@ export async function createBackup(): Promise<{ tmpPath: string; size: number }>
     random: crypto.randomBytes(8).toString("hex"),
   };
   zip.addFile("manifest.json", Buffer.from(JSON.stringify(manifest, null, 2)));
-  zip.addLocalFile(snapshot, zip, "app.db");
+  zip.addLocalFile(snapshot, "", "app.db");
 
   const uploadsBase = UPLOADS_DIR();
-  for (const rel of walk(uploadsBase, uploadsBase, [])) {
-    zip.addLocalFile(path.join(uploadsBase, rel), zip, path.join("uploads", rel));
+  const uploadFiles: string[] = [];
+  walk(uploadsBase, uploadsBase, uploadFiles);
+  for (const rel of uploadFiles) {
+    zip.addLocalFile(path.join(uploadsBase, rel), "", path.join("uploads", rel));
   }
 
   const tmpPath = path.join(tmpDir, "backup.zip");

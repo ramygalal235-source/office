@@ -26,6 +26,7 @@ import {
   Settings,
   ShoppingCart,
   Sun,
+  Target,
   UserRound,
   Users,
   Wallet,

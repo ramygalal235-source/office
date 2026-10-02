@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const companyId = await requireCompanyId();
     const code = await generateNumber("SAFE");
     const created = await db.safe.create({
-      data: { ...parsed.data, code, companyId, accountId: parsed.data.accountId || null, openingBalance: round2(parsed.data.openingBalance) },
+      data: { ...parsed.data, code, companyId, accountId: parsed.data.accountId || null, openingBalance: round2(parsed.data.openingBalance), currency: parsed.data.currency ?? "EGP" },
     });
     await auditLog("CREATE", "Safe", created.id, `إضافة ${created.type === "CASH" ? "خزينة" : "حساب بنكي"}: ${created.name}`, user?.username);
     return ok(created);

@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (!body?.status || !["DRAFT", "ACTIVE", "CLOSED"].includes(body.status)) return fail("حالة غير معروفة", 400);
   try {
     const budget = await db.budget.update({ where: { id }, data: { status: body.status }, include: { lines: true } });
-    await auditLog("UPDATE", "Budget", id, `تغيير حالة موازنة إلى ${body.status}`, admin);
+    await auditLog("UPDATE", "Budget", id, `تغيير حالة موازنة إلى ${body.status}`, admin.username);
     return ok(budget);
   } catch (e) {
     return handleDbError(e);
@@ -29,7 +29,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     if (!budget) return fail("الموازنة غير موجودة", 404);
     if (budget.status === "CLOSED") return fail("موازنة مغلقة — لا يمكن حذفها (سجل محاسبي)", 409);
     await db.budget.delete({ where: { id } });
-    await auditLog("DELETE", "Budget", id, `حذف ${budget.name}`, admin);
+    await auditLog("DELETE", "Budget", id, `حذف ${budget.name}`, admin.username);
     return ok({ deleted: true });
   } catch (e) {
     return handleDbError(e);

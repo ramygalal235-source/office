@@ -305,8 +305,8 @@ export async function savePayrollParams(p: PayrollParams) {
     (Object.entries(PARAM_KEYS) as [string, string][]).map(([field, key]) =>
       db.setting.upsert({
         where: { key },
-        update: { value: String(field === "whtBrackets" ? JSON.stringify(brackets) : p[field]) },
-        create: { key, value: String(field === "whtBrackets" ? JSON.stringify(brackets) : p[field]), group: "payroll" },
+        update: { value: String(field === "whtBrackets" ? JSON.stringify(brackets) : p[field as keyof PayrollParams]) },
+        create: { key, value: String(field === "whtBrackets" ? JSON.stringify(brackets) : p[field as keyof PayrollParams]), group: "payroll" },
       })
     )
   );

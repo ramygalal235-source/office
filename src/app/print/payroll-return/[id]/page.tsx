@@ -31,8 +31,8 @@ export default async function PayrollReturnPage({ params }: { params: Promise<{ 
   ]);
   if (!run) redirect("/payroll");
 
-  const company = await db.clientCompany.findUnique({ where: { id: run.companyId } });
-  const params = await getPayrollParams();
+  const company = run.companyId ? await db.clientCompany.findUnique({ where: { id: run.companyId } }) : null;
+  const payrollParams = await getPayrollParams();
   const now = new Date();
   const monthYear = `${MONTHS[run.periodMonth - 1]} ${run.periodYear}`;
 
@@ -85,7 +85,7 @@ export default async function PayrollReturnPage({ params }: { params: Promise<{ 
         <div className="print-doc-meta">
           <div className="print-doc-meta-item">
             <span>الجهة:</span>
-            <b>{company?.name ?? "—"}</b>
+            <b>{company?.nameAr ?? company?.nameEn ?? "—"}</b>
           </div>
           {company?.taxNumber && (
             <div className="print-doc-meta-item">
@@ -103,7 +103,7 @@ export default async function PayrollReturnPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        <h2>أولًا — التأمينات الاجتماعية (نسبة الموظف {pct(params.insuranceRate)} — نسبة صاحب العمل {pct(params.employerInsuranceRate)})</h2>
+        <h2>أولًا — التأمينات الاجتماعية (نسبة الموظف {pct(payrollParams.insuranceRate)} — نسبة صاحب العمل {pct(payrollParams.employerInsuranceRate)})</h2>
         <table>
           <thead>
             <tr>
@@ -182,8 +182,8 @@ export default async function PayrollReturnPage({ params }: { params: Promise<{ 
               </tr>
             </thead>
             <tbody>
-              {params.whtBrackets.map((b, i) => {
-                const from = i === 0 ? 0 : params.whtBrackets[i - 1].upTo;
+              {payrollParams.whtBrackets.map((b, i) => {
+                const from = i === 0 ? 0 : payrollParams.whtBrackets[i - 1].upTo;
                 const to = Number.isFinite(b.upTo) ? b.upTo : null;
                 return (
                   <tr key={i}>

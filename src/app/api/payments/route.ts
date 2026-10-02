@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const companyId = await requireCompanyId();
     const where = { companyId, ...(type ? { type } : {}), ...(safeId ? { safeId } : {}) };
 
-    const [items, total, sums, posted] = await Promise.all([
+    const [items, total, sums] = await Promise.all([
       db.payment.findMany({
         where,
         include: { party: { select: { id: true, name: true } }, safe: { select: { id: true, name: true } } },
@@ -40,11 +40,12 @@ export async function GET(req: NextRequest) {
       }),
       db.payment.count({ where }),
       db.payment.groupBy({ by: ["type"], where, _sum: { amount: true } }),
-      db.journalEntry.findMany({
-        where: { sourceType: "PAYMENT", sourceId: { in: items.map((p) => p.id) } },
-        select: { sourceId: true },
-      }),
     ]);
+    // posted بعد items (لا يمكن الاستدعاء بالتوازي — يستند إلى نتائج items)
+    const posted = await db.journalEntry.findMany({
+      where: { sourceType: "PAYMENT", sourceId: { in: items.map((p) => p.id) } },
+      select: { sourceId: true },
+    });
 
     const postedSet = new Set(posted.map((e) => e.sourceId));
     const withPosted = items.map((p) => ({ ...p, journalPosted: postedSet.has(p.id) }));

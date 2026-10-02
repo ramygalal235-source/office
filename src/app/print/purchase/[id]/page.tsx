@@ -32,7 +32,7 @@ export default async function PrintPurchasePage({ params }: { params: Promise<{ 
         dueDate={purchase.dueDate}
         partyLabel="المورد"
         partyName={purchase.supplier?.name}
-        company={purchase.company?.name}
+        company={purchase.company?.nameAr ?? purchase.company?.nameEn ?? null}
         lines={purchase.items.map((l) => ({
           description: l.description,
           quantity: l.quantity,

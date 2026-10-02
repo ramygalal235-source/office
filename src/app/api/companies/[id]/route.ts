@@ -41,6 +41,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     for (const key of Object.keys(data) as (keyof typeof data)[]) {
       if (data[key] === undefined) delete data[key];
     }
+    if (data.code === null) delete data.code; // code غير قابل للافتراض null في المخطط
     const updated = await db.clientCompany.update({ where: { id }, data });
     await auditLog("UPDATE", "ClientCompany", id, `تعديل بيانات ${updated.nameAr}`, user?.username);
     return ok(updated);

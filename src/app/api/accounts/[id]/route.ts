@@ -9,7 +9,10 @@ type Ctx = { params: Promise<{ id: string }> };
 const updateSchema = z.object({
   name: z.string().trim().min(1, "اسم الحساب مطلوب").max(200).optional(),
   type: z.enum(["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"]).optional(),
-  isActive: z.union([z.boolean(), z.string()]).optional(),
+  isActive: z
+    .union([z.boolean(), z.string()])
+    .transform((v) => (typeof v === "boolean" ? v : v === "true"))
+    .optional(),
 });
 
 export async function PUT(req: NextRequest, { params }: Ctx) {

@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
   if (!year || !month || month < 1 || month > 12) return fail("حدد سنة وشهر شغل الرواتب", 400);
   try {
     const companyId = await requireCompanyId();
-    const run = await runPayroll(year, month, admin, companyId);
-    await auditLog("CREATE", "PayrollRun", run.id, `شغل رواتب ${month}/${year}`, admin);
+    const run = await runPayroll(year, month, admin.username, companyId);
+    await auditLog("CREATE", "PayrollRun", run.id, `شغل رواتب ${month}/${year}`, admin.username);
     return ok(run, { ok: true });
   } catch (e) {
     if (e instanceof Error && /توجد شغل رواتب/.test(e.message)) return fail(e.message, 409);

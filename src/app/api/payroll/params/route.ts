@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest) {
         rate: Number(b.rate),
       })),
     });
-    await auditLog("UPDATE", "Setting", "payroll", "تحديث معاملات الرواتب", admin);
+    await auditLog("UPDATE", "Setting", "payroll", "تحديث معاملات الرواتب", admin.username);
     return ok(await getPayrollParams());
   } catch (e) {
     return handleDbError(e);

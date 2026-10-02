@@ -12,8 +12,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const body = (await req.json().catch(() => null)) as { safeId?: string } | null;
   if (!body?.safeId) return fail("اختر الخزينة/البنك الممول", 400);
   try {
-    const result = await postAssetAcquisition(id, body.safeId, admin);
-    await auditLog("POST", "FixedAsset", id, `ترحيل قيد استحواذ: ${result.message ?? ""}`, admin);
+    const result = await postAssetAcquisition(id, body.safeId, admin.username);
+    await auditLog("POST", "FixedAsset", id, `ترحيل قيد استحواذ: ${result.message ?? ""}`, admin.username);
     return ok(result, { ok: result.ok });
   } catch (e) {
     return handleDbError(e);

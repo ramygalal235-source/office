@@ -10,8 +10,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!admin) return fail("صلاحية المدير مطلوبة", 403);
   const { id } = await params;
   try {
-    const result = await postPayrollRun(id, admin);
-    await auditLog("POST", "PayrollRun", id, `ترحيل رواتب: ${result.message ?? result.journalNumber ?? ""}`, admin);
+    const result = await postPayrollRun(id, admin.username);
+    await auditLog("POST", "PayrollRun", id, `ترحيل رواتب: ${result.message ?? result.journalNumber ?? ""}`, admin.username);
     return ok(result, { ok: result.ok });
   } catch (e) {
     return handleDbError(e);

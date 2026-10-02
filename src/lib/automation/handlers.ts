@@ -157,7 +157,7 @@ handlers["sla.scan_breaches"] = async () => {
 
   let notified = 0;
   for (const task of overdue) {
-    const days = Math.floor((now.getTime() - new Date(task.dueDate).getTime()) / 86400000);
+    const days = task.dueDate ? Math.floor((now.getTime() - task.dueDate.getTime()) / 86400000) : 0;
     await db.notification.create({
       data: {
         userId: task.assignedTo,

@@ -5,11 +5,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // مخرجات مستقلة (standalone) لتشغيل البرنامج داخل غلاف .exe —
   // انظر launcher/electron و scripts/package-standalone.mjs
+  // (خيار eslint.ignoreDuringBuilds أُزيل في Next 16 — البناء لا يفحص lint أصلًا)
   output: "standalone",
   // ===== رؤوس أمان على كل الاستجابات =====
   // (بلا CSP: النظام يعتمد أنماطًا مضمّنة في رسوم الطباعة والرسوم البيانية)

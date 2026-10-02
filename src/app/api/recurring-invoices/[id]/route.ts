@@ -7,13 +7,13 @@ import { firstIssue, optNum, optText, reqDate } from "@/lib/validators";
 import { getHandler } from "@/lib/automation/handlers";
 import { round2 } from "@/lib/money";
 
-const FREQS = ["MONTHLY", "QUARTERLY", "ANNUALLY"];
+const FREQS = ["MONTHLY", "QUARTERLY", "ANNUALLY"] as const;
 
 const updateSchema = z.object({
   name: optText(200),
   customerId: optText(30).nullable(),
   amount: optNum(),
-  frequency: z.enum(FREQS as const),
+  frequency: z.enum(FREQS),
   nextDueDate: reqDate(),
   notes: optText(1000).nullable(),
   active: z.boolean(),
@@ -64,7 +64,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       if (value === undefined) continue;
       if (key === "amount") data.amount = round2(value as number);
       else if (key === "customerId" && value !== null) {
-        const customer = await db.party.findUnique({ where: { id: value } });
+        const customer = await db.party.findUnique({ where: { id: value as string } });
         if (!customer || customer.type !== "CUSTOMER") return fail("العميل غير موجود");
         data.customerId = value;
       } else data[key] = value;

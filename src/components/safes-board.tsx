@@ -92,10 +92,11 @@ export function SafesBoard({
       "/api/safes",
       { silent: true }
     );
-    if (res.ok && Array.isArray(res.data)) {
+    const data = res.data;
+    if (res.ok && Array.isArray(data)) {
       setRows((prev) => {
         const byId = new Map(prev.map((r) => [r.id, r]));
-        const next = res.data.map((b) => {
+        const next = data.map((b) => {
           const existing = byId.get(b.id);
           if (existing) return { ...existing, totalIn: b.totalIn, totalOut: b.totalOut, balance: b.balance, movementCount: b.movementCount, openingBalance: b.openingBalance, name: b.name, type: b.type };
           return {

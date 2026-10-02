@@ -13,7 +13,10 @@ const updateSchema = z.object({
   accountNumber: optText(50),
   iban: optText(50),
   branch: optText(120),
-  isActive: z.union([z.boolean(), z.string()]).optional(),
+  isActive: z
+    .union([z.boolean(), z.string()])
+    .transform((v) => (typeof v === "boolean" ? v : v === "true"))
+    .optional(),
 });
 
 export async function PUT(req: NextRequest, { params }: Ctx) {

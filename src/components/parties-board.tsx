@@ -106,8 +106,8 @@ export function PartiesBoard({ initialParties, userRole }: { initialParties: Boa
     ]);
     if (res.ok && Array.isArray(res.data)) {
       const balanceBy = new Map<string, number>([
-        ...(custBal.ok && Array.isArray(custBal.data) ? custBal.data.map((b) => [b.partyId, b.balance]) : []),
-        ...(suppBal.ok && Array.isArray(suppBal.data) ? suppBal.data.map((b) => [b.partyId, b.balance]) : []),
+        ...(custBal.ok && Array.isArray(custBal.data) ? custBal.data.map((b): [string, number] => [b.partyId, b.balance]) : []),
+        ...(suppBal.ok && Array.isArray(suppBal.data) ? suppBal.data.map((b): [string, number] => [b.partyId, b.balance]) : []),
       ]);
       setRows(
         res.data.map((p) => ({

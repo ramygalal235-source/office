@@ -18,9 +18,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         proceeds: body?.proceeds ? Number(body.proceeds) : 0,
         safeId: body?.safeId ?? undefined,
       },
-      admin
+      admin.username
     );
-    await auditLog("DISPOSE", "FixedAsset", id, result.message, admin);
+    await auditLog("DISPOSE", "FixedAsset", id, result.message, admin.username);
     return ok(result, { ok: result.ok });
   } catch (e) {
     return handleDbError(e);

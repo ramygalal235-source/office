@@ -41,7 +41,6 @@ type LoadedInvoice = {
     email: string | null;
     activity: string | null;
     electronicInvoiceId: string | null;
-    currency: string;
   } | null;
   items: {
     description: string;
@@ -84,7 +83,6 @@ async function loadInvoice(invoiceId: string): Promise<LoadedInvoice | null> {
           email: true,
           activity: true,
           electronicInvoiceId: true,
-          currency: true,
         },
       },
       items: {
@@ -158,7 +156,8 @@ export async function submitInvoiceToEta(
         taxRate: inv.taxRate,
         taxAmount: inv.taxAmount,
         totalAmount: inv.totalAmount,
-        currency: inv.company.currency || "EGP",
+        // النظام يصدر بالجنيه المصري فقط — الرقابة النهائية على العملة في الماسح
+        currency: "EGP",
         notes: inv.notes,
       },
       inv.company,

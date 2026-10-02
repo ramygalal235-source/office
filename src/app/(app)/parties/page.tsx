@@ -19,8 +19,8 @@ export default async function PartiesPage() {
   ]);
 
   const balanceBy = new Map<string, number>([
-    ...customerBalances.map((b) => [b.partyId, b.balance]),
-    ...supplierBalances.map((b) => [b.partyId, b.balance]),
+    ...customerBalances.map((b): [string, number] => [b.partyId, b.balance]),
+    ...supplierBalances.map((b): [string, number] => [b.partyId, b.balance]),
   ]);
 
   const rows: BoardParty[] = parties.map((p) => ({

@@ -38,14 +38,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   try {
     if (action === "refresh") {
-      const result = await refreshInvoiceEtaStatus(id, admin);
-      await auditLog("ETA_REFRESH", "Invoice", id, `تحديث حالة الفوترة الإلكترونية: ${result.message}`, admin);
+      const result = await refreshInvoiceEtaStatus(id, admin.username);
+      await auditLog("ETA_REFRESH", "Invoice", id, `تحديث حالة الفوترة الإلكترونية: ${result.message}`, admin.username);
       return ok(result, { ok: result.ok });
     }
     if (action !== "submit") return fail("إجراء غير معروف", 400);
 
-    const result = await submitInvoiceToEta(id, admin);
-    await auditLog("ETA_SUBMIT", "Invoice", id, `إرسال الفاتورة للهيئة: ${result.message}`, admin);
+    const result = await submitInvoiceToEta(id, admin.username);
+    await auditLog("ETA_SUBMIT", "Invoice", id, `إرسال الفاتورة للهيئة: ${result.message}`, admin.username);
     if (!result.ok && !result.skipped) return fail(result.message, 400);
     return ok(result, { ok: result.ok });
   } catch (e) {

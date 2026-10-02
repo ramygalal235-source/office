@@ -277,10 +277,10 @@ export async function getFinancialStatement(
 
   const fixedCodes = ["12"];
   const currentAssets = sumMoney(
-    leaf.filter((b) => b.type === "ASSET" && !b.code.startsWith(fixedCodes)).map((b) => Math.abs(b.balance))
+    leaf.filter((b) => b.type === "ASSET" && !fixedCodes.some((c) => b.code.startsWith(c))).map((b) => Math.abs(b.balance))
   );
   const fixedAssets = sumMoney(
-    leaf.filter((b) => b.type === "ASSET" && b.code.startsWith(fixedCodes)).map((b) => Math.abs(b.balance))
+    leaf.filter((b) => b.type === "ASSET" && fixedCodes.some((c) => b.code.startsWith(c))).map((b) => Math.abs(b.balance))
   );
 
   const currentLiabilities = sumMoney(
@@ -497,7 +497,7 @@ export async function getSafeBalances(companyId?: string) {
     _sum: { amount: true },
   });
 
-  const pick = (arr: typeof grouped, id: string) => arr.find((x) => x.safeId === id);
+  const pick = <T extends { safeId: string | null }>(arr: T[], id: string) => arr.find((x) => x.safeId === id);
 
   return safes.map((safe) => {
     const total = pick(grouped, safe.id)?._sum.amount ?? 0;

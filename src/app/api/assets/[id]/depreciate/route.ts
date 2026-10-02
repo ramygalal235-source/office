@@ -14,9 +14,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const month = Number(body?.month);
   if (!year || !month || month < 1 || month > 12) return fail("حدد سنة وشهر الإهلاك", 400);
   try {
-    const result = await depreciateAsset(id, year, month, admin);
+    const result = await depreciateAsset(id, year, month, admin.username);
     if (!result.ok) return fail(result.message, 400);
-    await auditLog("DEPRECIATE", "FixedAsset", id, result.message, admin);
+    await auditLog("DEPRECIATE", "FixedAsset", id, result.message, admin.username);
     return ok(result, { ok: result.ok });
   } catch (e) {
     return handleDbError(e);

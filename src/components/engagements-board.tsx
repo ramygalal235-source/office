@@ -252,7 +252,7 @@ export function EngagementsBoard({
     if (!service) return null;
     const y = Number(periodYear);
     const m = Number(periodMonth) || 1;
-    return new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0).getTime() + service.slaDays * 86400000);
+    return new Date(Date.UTC(y, m - 1, 1) + service.slaDays * 86400000);
   })();
 
   const create = async () => {

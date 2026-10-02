@@ -31,7 +31,7 @@ export default async function PaymentsPage() {
   const rows: BoardPayment[] = payments.map((p) => ({
     id: p.id,
     number: p.number,
-    type: p.type,
+    type: p.type as "OUT" | "IN",
     partyId: p.partyId,
     partyName: p.party?.name ?? null,
     safeId: p.safeId,

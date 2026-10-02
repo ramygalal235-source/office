@@ -160,7 +160,7 @@ export default async function DashboardPage() {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     monthLabels.push({ label: d.toLocaleDateString("ar-EG", { month: "short" }), key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` });
   }
-  const monthlyRevenue = monthLabels.map((m) => ({ ...m, net: 0, tax: 0 }));
+  const monthlyRevenue = monthLabels.map((m) => ({ ...m, month: m.label, net: 0, tax: 0 }));
   for (const inv of revenueRows) {
     const key = `${new Date(inv.date).getFullYear()}-${String(new Date(inv.date).getMonth() + 1).padStart(2, "0")}`;
     const slot = monthlyRevenue.find((x) => x.key === key);

@@ -18,7 +18,7 @@ export default async function SettingsPage() {
   if (!session) redirect("/login");
   if (session.role !== "admin") redirect("/");
 
-  const [brand, ocr, etaRaw, stats, chain, counts, lastBackup, users, restoreState, defaultCreds] = await Promise.all([
+  const [brand, ocr, etaRaw, stats, chain, counts, lastBackup, restoreState, defaultCreds, users] = await Promise.all([
     getOfficeBrand(),
     (async () => {
       const s = await getOcrSettings();

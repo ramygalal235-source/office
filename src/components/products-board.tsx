@@ -143,7 +143,16 @@ export function ProductsBoard({
       return;
     }
     setSaving(true);
-    const body = {
+    const body: {
+      name: string;
+      category: string | null;
+      unit: string;
+      costPrice: number;
+      salePrice: number;
+      minStock: number;
+      notes: string | null;
+      quantity?: number;
+    } = {
       name: form.name.trim(),
       category: form.category || null,
       unit: form.unit || "قطعة",

@@ -137,7 +137,7 @@ export default async function ReportsPage() {
                   </>
                 ) : (
                   <>
-                    <XCircle className="size-3" /> فرق {formatMoney(trial.balanced)}
+                    <XCircle className="size-3" /> فرق {formatMoney(Math.abs(trial.totalDebit - trial.totalCredit))}
                   </>
                 )}
               </Badge>

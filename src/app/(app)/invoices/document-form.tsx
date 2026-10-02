@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/table";
 
 export type PartyOption = { id: string; name: string };
-export type AccountOption = { id: string; code: string; name: string };
+export type AccountOption = { id: string; code: string; name: string; type: string };
 export type ProductOption = {
   id: string;
   code: string;
@@ -124,7 +124,7 @@ export function DocumentForm({
     [lines]
   );
 
-  const subtotal = sumMoney(computed.map((l) => l.quantity * l.unitPrice));
+  const subtotal = sumMoney(computed.map((l) => (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0)));
   const globalDiscount = round2(Number(discount) || 0);
   const net = round2(subtotal - globalDiscount);
   const tax = sumMoney(computed.map((l) => l.tax));

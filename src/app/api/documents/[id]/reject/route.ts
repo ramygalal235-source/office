@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       action: "document.rejected",
       entity: "DmsDocument",
       entityId: id,
-      actorType: "user",
+      actorType: "human",
       actor: user?.username ?? "unknown",
       summary: `رفض وثيقة «${doc.title}»${body?.reason ? ` — السبب: ${body.reason}` : ""}`,
       payload: { reason: body?.reason ?? null },
